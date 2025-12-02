@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>狼人杀 - 用户中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/daisyui/4.12.10/full.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .mobile-input {
+            min-height: 44px;
+            font-size: 16px;
+        }
+        .btn-mobile {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen p-4">
+    <!-- 顶部导航 -->
+    <div class="navbar bg-transparent mb-4">
+        <div class="navbar-start">
+            <button onclick="logout()" class="btn btn-ghost btn-sm text-white">
+                <i class="fas fa-sign-out-alt mr-2"></i>退出
+            </button>
+        </div>
+        <div class="navbar-center">
+            <h1 class="text-xl font-bold text-white">狼人杀</h1>
+        </div>
+        <div class="navbar-end">
+            <button onclick="showRules()" class="btn btn-ghost btn-sm text-white">
+                <i class="fas fa-book mr-2"></i>规则
+            </button>
+        </div>
+    </div>
+
+    <!-- 用户信息卡片 -->
+    <div class="glass-effect rounded-2xl p-6 mb-6 shadow-2xl">
+        <div class="flex items-center mb-4">
+            <div class="user-avatar mr-4" id="userAvatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="flex-1">
+                <h2 class="text-xl font-bold text-white" id="userName">用户名</h2>
+                <p class="text-white/70 text-sm">欢迎回来</p>
+            </div>
+        </div>
+
+        <!-- 个人信息 -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white/10 rounded-lg p-3 text-center">
+                <div class="text-2xl font-bold text-white" id="winStreak">0</div>
+                <div class="text-white/70 text-sm">连胜次数</div>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3 text-center">
+                <div class="text-2xl font-bold text-white" id="totalGames">0</div>
+                <div class="text-white/70 text-sm">总场次</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 功能按钮区域 -->
+    <div class="space-y-4 mb-6">
+        <button onclick="joinGame()" class="btn btn-primary btn-lg w-full btn-mobile">
+            <i class="fas fa-gamepad mr-3"></i>加入对局
+        </button>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="showRedeemCode()" class="btn btn-success btn-mobile">
+                <i class="fas fa-gift mr-2"></i>兑换码
+            </button>
+            <button onclick="showProfile()" class="btn btn-info btn-mobile">
+                <i class="fas fa-user-cog mr-2"></i>个人设置
+            </button>
+        </div>
+    </div>
+
+    <!-- 游戏状态 -->
+    <div class="glass-effect rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-lg font-bold text-white mb-4">
+            <i class="fas fa-chart-line mr-2"></i>游戏统计
+        </h3>
+        <div class="space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-white/80">胜率</span>
+                <div class="flex items-center">
+                    <div class="w-20 bg-white/20 rounded-full h-2 mr-2">
+                        <div class="bg-success h-2 rounded-full" style="width: 0%" id="winRate"></div>
+                    </div>
+                    <span class="text-white text-sm" id="winRateText">0%</span>
+                </div>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-white/80">好人阵营胜利</span>
+                <span class="text-white font-bold" id="goodWins">0</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-white/80">狼人阵营胜利</span>
+                <span class="text-white font-bold" id="wolfWins">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 兑换码模态框 -->
+    <dialog id="redeemModal" class="modal">
+        <div class="modal-box bg-white">
+            <h3 class="font-bold text-lg mb-4">
+                <i class="fas fa-gift mr-2 text-success"></i>兑换码
+            </h3>
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text">请输入兑换码</span>
+                </label>
+                <input type="text" placeholder="输入兑换码" class="input input-bordered mobile-input">
+            </div>
+            <div class="modal-action">
+                <button onclick="redeemCode()" class="btn btn-success">
+                    <i class="fas fa-check mr-2"></i>兑换
+                </button>
+                <button onclick="closeRedeemModal()" class="btn btn-ghost">
+                    <i class="fas fa-times mr-2"></i>取消
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        // 初始化用户信息
+        function initUserInfo() {
+            const currentUser = JSON.parse(localStorage.getItem('current_user'));
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 显示用户信息
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+
+            // 加载游戏数据
+            loadGameStats();
+        }
+
+        // 加载游戏统计
+        function loadGameStats() {
+            const userKey = JSON.parse(localStorage.getItem('current_user')).key;
+            const gameStats = JSON.parse(localStorage.getItem('game_stats') || '{}');
+            const userStats = gameStats[userKey] || {
+                winStreak: 0,
+                totalGames: 0,
+                wins: 0,
+                goodWins: 0,
+                wolfWins: 0
+            };
+
+            document.getElementById('winStreak').textContent = userStats.winStreak;
+            document.getElementById('totalGames').textContent = userStats.totalGames;
+            document.getElementById('goodWins').textContent = userStats.goodWins;
+            document.getElementById('wolfWins').textContent = userStats.wolfWins;
+
+            // 计算胜率
+            const winRate = userStats.totalGames > 0 ? Math.round((userStats.wins / userStats.totalGames) * 100) : 0;
+            document.getElementById('winRate').style.width = winRate + '%';
+            document.getElementById('winRateText').textContent = winRate + '%';
+        }
+
+        // 加入游戏
+        function joinGame() {
+            window.location.href = 'match.html';
+        }
+
+        // 显示兑换码
+        function showRedeemCode() {
+            document.getElementById('redeemModal').showModal();
+        }
+
+        function closeRedeemModal() {
+            document.getElementById('redeemModal').close();
+        }
+
+        function redeemCode() {
+            alert('兑换码功能暂未开放，敬请期待');
+            closeRedeemModal();
+        }
+
+        // 显示规则
+        function showRules() {
+            window.location.href = 'rules.html';
+        }
+
+        // 显示个人设置
+        function showProfile() {
+            alert('个人设置功能开发中...');
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('current_user');
+            window.location.href = 'index.html';
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initUserInfo();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>狼人杀 - 管理员后台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/daisyui/4.12.10/full.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .mobile-input {
+            min-height: 44px;
+            font-size: 16px;
+        }
+        .btn-mobile {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        .status-pending {
+            background: #fbbf24;
+            color: #92400e;
+        }
+        .status-approved {
+            background: #34d399;
+            color: #065f46;
+        }
+        .status-rejected {
+            background: #f87171;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen p-4">
+    <!-- 顶部导航 -->
+    <div class="navbar bg-transparent mb-4">
+        <div class="navbar-start">
+            <button onclick="logout()" class="btn btn-ghost btn-sm text-white">
+                <i class="fas fa-sign-out-alt mr-2"></i>退出
+            </button>
+        </div>
+        <div class="navbar-center">
+            <h1 class="text-xl font-bold text-white">管理员后台</h1>
+        </div>
+        <div class="navbar-end">
+            <button onclick="refreshData()" class="btn btn-ghost btn-sm text-white">
+                <i class="fas fa-sync-alt mr-2"></i>刷新
+            </button>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="glass-effect rounded-2xl p-4 text-center">
+            <div class="text-2xl font-bold text-white" id="totalUsers">0</div>
+            <div class="text-white/70 text-sm">总用户数</div>
+        </div>
+        <div class="glass-effect rounded-2xl p-4 text-center">
+            <div class="text-2xl font-bold text-white" id="pendingCount">0</div>
+            <div class="text-white/70 text-sm">待审核</div>
+        </div>
+        <div class="glass-effect rounded-2xl p-4 text-center">
+            <div class="text-2xl font-bold text-white" id="approvedCount">0</div>
+            <div class="text-white/70 text-sm">已通过</div>
+        </div>
+        <div class="glass-effect rounded-2xl p-4 text-center">
+            <div class="text-2xl font-bold text-white" id="rejectedCount">0</div>
+            <div class="text-white/70 text-sm">已驳回</div>
+        </div>
+    </div>
+
+    <!-- 用户申请列表 -->
+    <div class="glass-effect rounded-2xl p-6 shadow-2xl mb-6">
+        <h2 class="text-xl font-bold text-white mb-4">
+            <i class="fas fa-users mr-2"></i>待审核申请
+        </h2>
+        
+        <div id="usersList" class="space-y-4">
+            <!-- 用户列表将在这里动态生成 -->
+        </div>
+
+        <div id="emptyState" class="text-center py-12 hidden">
+            <i class="fas fa-inbox text-6xl text-white/30 mb-4"></i>
+            <p class="text-white/60">暂无待审核用户</p>
+        </div>
+    </div>
+
+    <!-- 历史审核记录 -->
+    <div class="glass-effect rounded-2xl p-6 shadow-2xl">
+        <h2 class="text-xl font-bold text-white mb-4">
+            <i class="fas fa-history mr-2"></i>历史审核记录
+        </h2>
+        
+        <div class="tabs tabs-boxed mb-4">
+            <button onclick="showHistoryTab('approved')" class="tab tab-active" id="approvedTab">已通过</button>
+            <button onclick="showHistoryTab('rejected')" class="tab" id="rejectedTab">已驳回</button>
+        </div>
+
+        <div id="historyList" class="space-y-4">
+            <!-- 历史记录将在这里动态生成 -->
+        </div>
+
+        <div id="historyEmptyState" class="text-center py-12 hidden">
+            <i class="fas fa-history text-6xl text-white/30 mb-4"></i>
+            <p class="text-white/60">暂无历史审核记录</p>
+        </div>
+    </div>
+
+    <!-- 驳回原因模态框 -->
+    <dialog id="rejectModal" class="modal">
+        <div class="modal-box bg-white">
+            <h3 class="font-bold text-lg mb-4">
+                <i class="fas fa-times-circle mr-2 text-error"></i>驳回申请
+            </h3>
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text">驳回原因（选填）</span>
+                </label>
+                <textarea id="rejectReason" class="textarea textarea-bordered h-24" 
+                          placeholder="请输入驳回原因..."></textarea>
+            </div>
+            <div class="modal-action">
+                <button onclick="confirmReject()" class="btn btn-error">
+                    <i class="fas fa-check mr-2"></i>确认驳回
+                </button>
+                <button onclick="closeRejectModal()" class="btn btn-ghost">
+                    <i class="fas fa-times mr-2"></i>取消
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        // 初始化管理员页面
+        function initAdminPage() {
+            // 检查管理员权限
+            const isAdmin = sessionStorage.getItem('is_admin');
+            if (!isAdmin) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            loadUsersData();
+        }
+
+        // 加载用户数据
+        function loadUsersData() {
+            const users = JSON.parse(localStorage.getItem('werewolf_users') || '[]');
+            const pendingUsers = users.filter(user => user.status === 'pending');
+            const approvedUsers = users.filter(user => user.status === 'approved');
+            const rejectedUsers = users.filter(user => user.status === 'rejected');
+
+            // 更新统计
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('pendingCount').textContent = pendingUsers.length;
+            document.getElementById('approvedCount').textContent = approvedUsers.length;
+            document.getElementById('rejectedCount').textContent = rejectedUsers.length;
+
+            // 显示待审核用户列表
+            const usersList = document.getElementById('usersList');
+            const emptyState = document.getElementById('emptyState');
+
+            if (pendingUsers.length === 0) {
+                usersList.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                usersList.innerHTML = pendingUsers.map(user => createUserCard(user)).join('');
+            }
+
+            // 默认显示已通过的历史记录
+            showHistoryTab('approved');
+        }
+
+        // 显示历史记录标签页
+        function showHistoryTab(tab) {
+            // 更新标签状态
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+            document.getElementById(tab + 'Tab').classList.add('tab-active');
+
+            // 加载对应的历史记录
+            const users = JSON.parse(localStorage.getItem('werewolf_users') || '[]');
+            const historyUsers = users.filter(user => user.status === tab);
+
+            const historyList = document.getElementById('historyList');
+            const historyEmptyState = document.getElementById('historyEmptyState');
+
+            if (historyUsers.length === 0) {
+                historyList.innerHTML = '';
+                historyEmptyState.classList.remove('hidden');
+            } else {
+                historyEmptyState.classList.add('hidden');
+                historyList.innerHTML = historyUsers.map(user => createHistoryCard(user)).join('');
+            }
+        }
+
+        // 创建历史记录卡片
+        function createHistoryCard(user) {
+            const applyTime = new Date(user.createdAt).toLocaleString('zh-CN');
+            const reviewTime = user.reviewTime ? new Date(user.reviewTime).toLocaleString('zh-CN') : '未知';
+            const statusClass = user.status === 'approved' ? 'status-approved' : 'status-rejected';
+            const statusText = user.status === 'approved' ? '已通过' : '已驳回';
+            
+            return `
+                <div class="bg-white/10 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3">
+                                ${user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold">${user.name}</h3>
+                                <p class="text-white/70 text-sm">密钥: ${user.key}</p>
+                                <p class="text-white/60 text-xs">申请时间: ${applyTime}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="badge ${statusClass} text-xs">${statusText}</div>
+                            <div class="text-white/60 text-xs mt-1">审核时间: ${reviewTime}</div>
+                        </div>
+                    </div>
+                    ${user.rejectReason ? `<div class="mt-2 p-2 bg-white/5 rounded text-white/80 text-sm">
+                        <i class="fas fa-comment mr-1"></i>驳回原因: ${user.rejectReason}
+                    </div>` : ''}
+                </div>
+            `;
+        }
+
+        // 创建用户卡片（待审核）
+        function createUserCard(user) {
+            const applyTime = new Date(user.createdAt).toLocaleString('zh-CN');
+            return `
+                <div class="bg-white/10 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3">
+                                ${user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold">${user.name}</h3>
+                                <p class="text-white/70 text-sm">密钥: ${user.key.substring(0, 3)}***</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="badge status-pending text-xs">待审核</div>
+                            <div class="text-white/60 text-xs mt-1">${applyTime}</div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="approveUser('${user.key}')" class="btn btn-success btn-sm flex-1 btn-mobile">
+                            <i class="fas fa-check mr-1"></i>通过
+                        </button>
+                        <button onclick="showRejectModal('${user.key}')" class="btn btn-error btn-sm flex-1 btn-mobile">
+                            <i class="fas fa-times mr-1"></i>驳回
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 通过用户申请
+        function approveUser(userKey) {
+            const users = JSON.parse(localStorage.getItem('werewolf_users') || '[]');
+            const user = users.find(u => u.key === userKey);
+            
+            if (user) {
+                user.status = 'approved';
+                user.reviewTime = new Date().toISOString();
+                localStorage.setItem('werewolf_users', JSON.stringify(users));
+                
+                // 显示成功提示
+                alert('用户申请已通过');
+                
+                // 刷新数据
+                loadUsersData();
+            }
+        }
+
+        // 显示驳回模态框
+        let currentRejectKey = null;
+        function showRejectModal(userKey) {
+            currentRejectKey = userKey;
+            document.getElementById('rejectModal').showModal();
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').close();
+            document.getElementById('rejectReason').value = '';
+            currentRejectKey = null;
+        }
+
+        // 确认驳回
+        function confirmReject() {
+            if (!currentRejectKey) return;
+            
+            const users = JSON.parse(localStorage.getItem('werewolf_users') || '[]');
+            const user = users.find(u => u.key === currentRejectKey);
+            
+            if (user) {
+                user.status = 'rejected';
+                user.rejectReason = document.getElementById('rejectReason').value;
+                user.reviewTime = new Date().toISOString();
+                localStorage.setItem('werewolf_users', JSON.stringify(users));
+                
+                alert('用户申请已驳回');
+                closeRejectModal();
+                loadUsersData();
+            }
+        }
+
+        // 刷新数据
+        function refreshData() {
+            loadUsersData();
+            alert('数据已刷新');
+        }
+
+        // 退出登录
+        function logout() {
+            sessionStorage.removeItem('is_admin');
+            window.location.href = 'index.html';
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initAdminPage();
+        });
+    </script>
+</body>
+</html>

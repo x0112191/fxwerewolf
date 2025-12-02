@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>狼人杀 - 游戏规则</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/daisyui/4.12.10/full.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .role-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        .role-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .role-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .role-faction {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 12px;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .role-skills {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            text-align: left;
+        }
+        .role-skills h4 {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .role-skills p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .faction-werewolf {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        .faction-good {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        .faction-neutral {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+        .faction-civilian {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen p-4">
+    <!-- 顶部导航 -->
+    <div class="navbar bg-transparent mb-4">
+        <div class="navbar-start">
+            <button onclick="goBack()" class="btn btn-ghost btn-sm text-white">
+                <i class="fas fa-arrow-left mr-2"></i>返回
+            </button>
+        </div>
+        <div class="navbar-center">
+            <h1 class="text-xl font-bold text-white">狼人杀游戏规则</h1>
+        </div>
+        <div class="navbar-end">
+            <button onclick="goHome()" class="btn btn-ghost btn-sm text-white">
+                <i class="fas fa-home mr-2"></i>主页
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- 游戏概述 -->
+        <div class="glass-effect rounded-2xl p-6 shadow-2xl">
+            <h2 class="text-2xl font-bold text-white mb-4">
+                <i class="fas fa-info-circle mr-2"></i>游戏概述
+            </h2>
+            <div class="text-white/90 space-y-4">
+                <p>狼人杀是一款多人参与的、以语言描述推动的、较量口才和分析判断能力的策略类桌面游戏。</p>
+                <p>游戏采用「3狼 + 5神 + 3民 + 1中立」固定配置，总人数精准为12人，确保阵营平衡。</p>
+                <p>游戏分为白天和黑夜两个阶段，玩家需要通过发言、投票、使用技能等方式达成各自阵营的胜利条件。</p>
+            </div>
+        </div>
+
+        <!-- 阵营划分 -->
+        <div class="glass-effect rounded-2xl p-6 shadow-2xl">
+            <h2 class="text-2xl font-bold text-white mb-6">
+                <i class="fas fa-users mr-2"></i>阵营划分
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- 狼人阵营 -->
+                <div class="role-card faction-werewolf">
+                    <div class="role-icon">🐺</div>
+                    <div class="role-name">狼人阵营</div>
+                    <div class="role-faction">3人</div>
+                    <div class="role-skills">
+                        <h4>成员构成</h4>
+                        <p>2名普通狼人 + 1名白狼王</p>
+                        <h4>胜利条件</h4>
+                        <p>击杀所有好人阵营玩家</p>
+                    </div>
+                </div>
+
+                <!-- 神民阵营 -->
+                <div class="role-card faction-good">
+                    <div class="role-icon">⭐</div>
+                    <div class="role-name">神民阵营</div>
+                    <div class="role-faction">5人</div>
+                    <div class="role-skills">
+                        <h4>成员构成</h4>
+                        <p>预言家、女巫、猎人、守卫、禁言长老</p>
+                        <h4>胜利条件</h4>
+                        <p>驱逐所有狼人阵营玩家</p>
+                    </div>
+                </div>
+
+                <!-- 平民阵营 -->
+                <div class="role-card faction-civilian">
+                    <div class="role-icon">👥</div>
+                    <div class="role-name">平民阵营</div>
+                    <div class="role-faction">3人</div>
+                    <div class="role-skills">
+                        <h4>成员构成</h4>
+                        <p>2名普通平民 + 1名老流氓</p>
+                        <h4>胜利条件</h4>
+                        <p>与神民阵营共同胜利</p>
+                    </div>
+                </div>
+
+                <!-- 中立阵营 -->
+                <div class="role-card faction-neutral">
+                    <div class="role-icon">🎯</div>
+                    <div class="role-name">中立阵营</div>
+                    <div class="role-faction">1人</div>
+                    <div class="role-skills">
+                        <h4>成员构成</h4>
+                        <p>炸弹人、白痴或丘比特（随机）</p>
+                        <h4>胜利条件</h4>
+                        <p>达成各自特殊胜利条件</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏流程 -->
+        <div class="glass-effect rounded-2xl p-6 shadow-2xl">
+            <h2 class="text-2xl font-bold text-white mb-6">
+                <i class="fas fa-clock mr-2"></i>游戏流程
+            </h2>
+            <div class="space-y-6">
+                <div class="bg-white/10 rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-white mb-3">
+                        <i class="fas fa-moon mr-2"></i>夜晚阶段
+                    </h3>
+                    <ol class="text-white/90 space-y-2 text-sm">
+                        <li>1. <strong>狼人行动：</strong>狼人共同睁眼，投票确定击杀目标</li>
+                        <li>2. <strong>神职行动：</strong>预言家查验、女巫用药、守卫守护等</li>
+                        <li>3. <strong>中立行动：</strong>丘比特连情侣等特殊技能</li>
+                        <li>4. <strong>禁言长老：</strong>最后行动，选择禁言目标</li>
+                    </ol>
+                </div>
+
+                <div class="bg-white/10 rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-white mb-3">
+                        <i class="fas fa-sun mr-2"></i>白天阶段
+                    </h3>
+                    <ol class="text-white/90 space-y-2 text-sm">
+                        <li>1. <strong>公布死亡：</strong>法官公布夜间死亡信息</li>
+                        <li>2. <strong>警长竞选：</strong>玩家可参与警长竞选</li>
+                        <li>3. <strong>发言讨论：</strong>按顺序发言，分析推理</li>
+                        <li>4. <strong>投票放逐：</strong>投票决定放逐目标</li>
+                        <li>5. <strong>技能触发：</strong>被放逐者技能可能触发</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- 特殊功能 -->
+        <div class="glass-effect rounded-2xl p-6 shadow-2xl">
+            <h2 class="text-2xl font-bold text-white mb-4">
+                <i class="fas fa-magic mr-2"></i>特殊功能
+            </h2>
+            <div class="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-eye text-yellow-400 mr-2"></i>
+                    <h3 class="text-lg font-bold text-yellow-400">透视功能</h3>
+                </div>
+                <p class="text-white/90 text-sm">
+                    在游戏中偷偷输入 <span class="bg-yellow-500/30 px-2 py-1 rounded font-mono">666888</span> 可获得单局单次透视功能，
+                    点击玩家头像即可查看其真实身份。透视效果持续3分钟，仅限本次游戏使用。
+                </p>
+            </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <div class="text-center mt-8">
+            <button onclick="goHome()" class="btn btn-primary btn-lg">
+                <i class="fas fa-home mr-2"></i>返回个人主页
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 返回上一页
+        function goBack() {
+            window.history.back();
+        }
+
+        // 返回个人主页
+        function goHome() {
+            window.location.href = 'user.html';
+        }
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 可以在这里添加一些动画效果或交互功能
+            console.log('规则页面已加载');
+        });
+    </script>
+</body>
+</html>

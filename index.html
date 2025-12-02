@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>狼人杀 - 身份验证</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/daisyui/4.12.10/full.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .mobile-input {
+            min-height: 44px;
+            font-size: 16px;
+        }
+        .btn-mobile {
+            min-height: 44px;
+            min-width: 44px;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <!-- 主登录页面 -->
+    <div id="loginPage" class="w-full max-w-md">
+        <!-- 页面标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">狼人杀</h1>
+            <p class="text-white/80 text-sm">身份验证系统</p>
+        </div>
+
+        <!-- 登录表单 -->
+        <div class="glass-effect rounded-2xl p-6 shadow-2xl">
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text text-white/90">请输入个人密钥</span>
+                </label>
+                <div class="join">
+                    <input type="password" id="loginKey" placeholder="请输入个人密钥" 
+                           class="input input-bordered join-item flex-1 mobile-input text-base">
+                    <button type="button" onclick="togglePasswordVisibility('loginKey', 'loginEye')" 
+                            class="btn btn-ghost join-item btn-mobile" id="loginEye">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="handleLogin()" class="btn btn-primary join-item btn-mobile">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </button>
+                </div>
+                <label class="label">
+                    <span class="label-text-alt text-white/70">未创建密钥请点击下方"创建密钥"按钮</span>
+                </label>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="showCreateKeyPage()" class="btn btn-success w-full btn-mobile">
+                    <i class="fas fa-key mr-2"></i>创建密钥
+                </button>
+                
+                <div class="collapse collapse-arrow bg-white/10 rounded-lg">
+                    <input type="checkbox" class="peer" />
+                    <div class="collapse-title text-white/90 font-medium">
+                        更多选项
+                    </div>
+                    <div class="collapse-content">
+                        <button onclick="showAdminLogin()" class="btn btn-ghost btn-sm w-full text-white/80">
+                            <i class="fas fa-user-shield mr-2"></i>管理员入口
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建密钥页面 -->
+    <div id="createKeyPage" class="w-full max-w-md hidden">
+        <div class="text-center mb-6">
+            <button onclick="showLoginPage()" class="btn btn-ghost btn-sm text-white mb-4">
+                <i class="fas fa-arrow-left mr-2"></i>返回登录
+            </button>
+            <h2 class="text-2xl font-bold text-white">创建密钥</h2>
+        </div>
+
+        <div class="glass-effect rounded-2xl p-6 shadow-2xl">
+            <!-- 姓名填写 -->
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text text-white/90">请填写个人姓名</span>
+                </label>
+                <input type="text" id="userName" placeholder="用于身份标识" 
+                       class="input input-bordered mobile-input text-base" maxlength="10">
+                <label class="label">
+                    <span class="label-text-alt text-white/70">姓名与密钥绑定，提交后不可修改</span>
+                </label>
+            </div>
+
+            <!-- 密钥设置 -->
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text text-white/90">请设置个人专属密钥</span>
+                </label>
+                <div class="join">
+                    <input type="password" id="newKey" placeholder="支持数字、字母组合，长度不低于6位" 
+                           class="input input-bordered join-item flex-1 mobile-input text-base" minlength="6">
+                    <button type="button" onclick="togglePasswordVisibility('newKey', 'newKeyEye')" 
+                            class="btn btn-ghost join-item btn-mobile" id="newKeyEye">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="showConfirmDialog()" class="btn btn-primary w-full btn-mobile">
+                <i class="fas fa-check mr-2"></i>确认创建
+            </button>
+        </div>
+    </div>
+
+    <!-- 管理员登录页面 -->
+    <div id="adminLoginPage" class="w-full max-w-md hidden">
+        <div class="text-center mb-6">
+            <button onclick="showLoginPage()" class="btn btn-ghost btn-sm text-white mb-4">
+                <i class="fas fa-arrow-left mr-2"></i>返回登录
+            </button>
+            <h2 class="text-2xl font-bold text-white">管理员验证</h2>
+        </div>
+
+        <div class="glass-effect rounded-2xl p-6 shadow-2xl">
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text text-white/90">请输入管理员密钥</span>
+                </label>
+                <div class="join">
+                    <input type="password" id="adminKey" placeholder="管理员专属密钥" 
+                           class="input input-bordered join-item flex-1 mobile-input text-base">
+                    <button type="button" onclick="togglePasswordVisibility('adminKey', 'adminEye')" 
+                            class="btn btn-ghost join-item btn-mobile" id="adminEye">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="handleAdminLogin()" class="btn btn-warning w-full btn-mobile">
+                <i class="fas fa-user-shield mr-2"></i>管理员登录
+            </button>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <dialog id="confirmDialog" class="modal">
+        <div class="modal-box bg-white">
+            <h3 class="font-bold text-lg text-red-600 mb-4">
+                <i class="fas fa-exclamation-triangle mr-2"></i>重要提示
+            </h3>
+            <p class="text-gray-700 mb-6">
+                姓名与密钥一旦确认提交，均无法修改，请务必核对信息并妥善保存密钥，避免遗忘或泄露。
+            </p>
+            <div class="modal-action">
+                <button onclick="createKey()" class="btn btn-primary">
+                    <i class="fas fa-check mr-2"></i>确认提交
+                </button>
+                <button onclick="closeConfirmDialog()" class="btn btn-ghost">
+                    <i class="fas fa-arrow-left mr-2"></i>返回修改
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <script>
+        // 页面切换函数
+        function showLoginPage() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('createKeyPage').classList.add('hidden');
+            document.getElementById('adminLoginPage').classList.add('hidden');
+        }
+
+        function showCreateKeyPage() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('createKeyPage').classList.remove('hidden');
+            document.getElementById('adminLoginPage').classList.add('hidden');
+        }
+
+        function showAdminLogin() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('createKeyPage').classList.add('hidden');
+            document.getElementById('adminLoginPage').classList.remove('hidden');
+        }
+
+        function showConfirmDialog() {
+            const userName = document.getElementById('userName').value.trim();
+            const newKey = document.getElementById('newKey').value.trim();
+            
+            if (!userName || userName.length < 1 || userName.length > 10) {
+                alert('请输入1-10位字符的姓名');
+                return;
+            }
+            
+            if (!newKey || newKey.length < 6) {
+                alert('请输入至少6位的密钥');
+                return exemplar;
+            }
+            
+            document.getElementById('confirmDialog').showModal();
+        }
+
+        function closeConfirmDialog() {
+            document.getElementById('confirmDialog').close();
+        }
+
+        // 创建密钥
+        function createKey() {
+            const userName = document.getElementById('userName').value.trim();
+            const newKey = document.getElementById('newKey').value.trim();
+            
+            // 保存用户信息
+            const userData = {
+                name: userName,
+                key: newKey,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+            
+            // 保存到本地存储
+            let users = JSON.parse(localStorage.getItem('werewolf_users') || '[]');
+            users.push(userData);
+            localStorage.setItem('werewolf_users', JSON.stringify(users));
+            
+            // 关闭对话框，返回登录页
+            closeConfirmDialog();
+            showLoginPage();
+            
+            // 显示成功提示
+            setTimeout(() => {
+                alert('姓名与密钥创建成功，请使用密钥登录');
+            }, 300);
+        }
+
+        // 用户登录
+        function handleLogin() {
+            const key = document.getElementById('loginKey').value.trim();
+            
+            if (!key) {
+                alert('请输入密钥');
+                return;
+            }
+            
+            // 查找用户
+            const users = JSON.parse(localStorage.getItem('werewolf_users') || '[]');
+            const user = users.find(u => u.key === key);
+            
+            if (!user) {
+                alert('密钥错误或未注册');
+                return;
+            }
+            
+            if (user.status !== 'approved') {
+                alert('您的申请正在审核中，请耐心等待');
+                return;
+            }
+            
+            // 保存当前登录用户
+            localStorage.setItem('current_user', JSON.stringify(user));
+            
+            // 跳转到用户主界面
+            window.location.href = 'user.html';
+        }
+
+        // 密码显示/隐藏切换
+        function togglePasswordVisibility(inputId, buttonId) {
+            const input = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // 管理员登录
+        function handleAdminLogin() {
+            const key = document.getElementById('adminKey').value.trim();
+            
+            if (key === 'A') {
+                // 设置管理员登录标记
+                sessionStorage.setItem('is_admin', 'true');
+                window.location.href = 'admin.html';
+            } else {
+                alert('管理员密钥错误');
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否已登录
+            const currentUser = localStorage.getItem('current_user');
+            if (currentUser) {
+                window.location.href = 'user.html';
+            }
+        });
+    </script>
+</body>
+</html>
