@@ -8,312 +8,220 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Microsoft YaHei', 'Arial', sans-serif;
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
     }
     body {
-      min-height: 100vh;
-      background: #0f172a;
+      background: #f5f5f5;
       padding: 30px;
-      color: #e2e8f0;
+      color: #333;
     }
     .rule-container {
       max-width: 1200px;
       margin: 0 auto;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      overflow: hidden;
-    }
-    .header {
-      background: linear-gradient(45deg, #1e3a8a, #3b82f6);
-      padding: 25px;
-      text-align: center;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 30px;
     }
     h1 {
-      color: #ffffff;
+      color: #333;
       font-size: 26px;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-    .content {
-      padding: 40px;
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e9ecef;
+      padding-bottom: 15px;
     }
     .faction-section {
-      margin-bottom: 50px;
-      padding-bottom: 30px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .faction-section:last-child {
-      border-bottom: none;
-      margin-bottom: 20px;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e9ecef;
     }
     h2 {
-      margin-bottom: 25px;
-      padding-left: 15px;
-      border-left: 4px solid;
+      color: #007bff;
       font-size: 22px;
-      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+      padding-left: 10px;
+      border-left: 4px solid #007bff;
     }
-    /* 阵营标题颜色 */
-    .wolf-faction h2 { border-color: #ef4444; }
-    .good-faction h2 { border-color: #22c55e; }
-    .civilian-faction h2 { border-color: #f59e0b; }
-    .neutral-faction h2 { border-color: #8b5cf6; }
-
     .role-list {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: 20px;
     }
     .role-card {
-      background: rgba(255, 255, 255, 0.05);
+      background: #f8f9fa;
       padding: 20px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: all 0.3s ease;
+      border-radius: 4px;
+      border-left: 3px solid #007bff;
+      transition: box-shadow 0.3s;
     }
     .role-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    /* 角色卡片边框颜色 */
-    .wolf-faction .role-card { border-left: 4px solid #ef4444; }
-    .good-faction .role-card { border-left: 4px solid #22c55e; }
-    .civilian-faction .role-card { border-left: 4px solid #f59e0b; }
-    .neutral-faction .role-card { border-left: 4px solid #8b5cf6; }
-
     .role-title {
       font-weight: 600;
       font-size: 18px;
       margin-bottom: 10px;
-      color: #ffffff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .role-count {
-      font-size: 14px;
-      color: #94a3b8;
-      background: rgba(255, 255, 255, 0.08);
-      padding: 3px 8px;
-      border-radius: 12px;
+      color: #333;
     }
     .role-desc {
-      color: #cbd5e1;
+      color: #666;
       line-height: 1.8;
       font-size: 14px;
-      margin-top: 10px;
-    }
-    .role-desc strong {
-      color: #ffffff;
     }
     .back-btn {
       display: inline-block;
-      margin: 30px 0 20px 0;
-      padding: 12px 24px;
-      background: linear-gradient(45deg, #3b82f6, #2563eb);
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #007bff;
       color: white;
       text-decoration: none;
-      border-radius: 8px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+      border-radius: 4px;
+      transition: background 0.3s;
     }
     .back-btn:hover {
-      background: linear-gradient(45deg, #2563eb, #1d4ed8);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+      background: #0069d9;
     }
   </style>
 </head>
 <body>
   <div class="rule-container">
-    <div class="header">
-      <h1>狼人杀 - 完整角色规则清单</h1>
+    <h1>狼人杀 - 完整角色规则清单</h1>
+
+    <!-- 狼人阵营 -->
+    <div class="faction-section">
+      <h2>狼人阵营</h2>
+      <div class="role-list">
+        <div class="role-card">
+          <div class="role-title">普通狼人（数量：1）</div>
+          <div class="role-desc">
+            核心技能：夜间共同行动，选择1名玩家“击杀”；白天可伪装成好人误导他人。<br>
+            胜利目标：消灭所有神民与平民。
+          </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">白狼王（数量：1）</div>
+          <div class="role-desc">
+            核心技能：夜间同普通狼人一起行动；白天任意阶段可主动“自爆”，自爆后立即出局，并带走1名任意玩家。<br>
+            胜利目标：消灭所有神民与平民。
+          </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">血月使徒（数量：1）</div>
+          <div class="role-desc">
+            核心技能：1.首夜不参与狼刀，仅睁眼旁观狼人行动；2.从第二晚起，夜间可单独睁眼“诅咒”1人，被诅咒者当晚无法使用任何技能；3.诅咒无冷却，同一晚仅能诅咒1人。<br>
+            胜利目标：消灭所有神民与平民。
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="content">
-      <!-- 狼人阵营 -->
-      <div class="faction-section wolf-faction">
-        <h2>狼人阵营</h2>
-        <div class="role-list">
-          <div class="role-card">
-            <div class="role-title">
-              普通狼人
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>夜间共同行动，选择1名玩家“击杀”；白天可伪装成好人误导他人。<br>
-              <strong>胜利目标：</strong>消灭所有神民与平民。
-            </div>
+
+    <!-- 神民阵营 -->
+    <div class="faction-section">
+      <h2>神民阵营</h2>
+      <div class="role-list">
+        <div class="role-card">
+          <div class="role-title">预言家（数量：1）</div>
+          <div class="role-desc">
+            核心技能：夜间查验1人阵营（好人/狼人/中立；野孩子未变狼时显“中立”，变狼后显“狼人”）。<br>
+            胜利目标：驱逐所有狼人。
           </div>
-          <div class="role-card">
-            <div class="role-title">
-              白狼王
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>夜间同普通狼人一起行动；白天任意阶段可主动“自爆”，自爆后立即出局，并带走1名任意玩家。<br>
-              <strong>胜利目标：</strong>消灭所有神民与平民。
-            </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">女巫（数量：1）</div>
+          <div class="role-desc">
+            核心技能：拥有解药（可救活被狼人击杀的玩家）、毒药（可毒杀1名任意玩家）各1瓶；若被血月使徒诅咒，当晚无法使用解药/毒药。<br>
+            胜利目标：驱逐所有狼人。
           </div>
-          <div class="role-card">
-            <div class="role-title">
-              血月使徒
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>1.首夜不参与狼刀，仅睁眼旁观狼人行动；2.从第二晚起，夜间可单独睁眼“诅咒”1人，被诅咒者当晚无法使用任何技能；3.诅咒无冷却，同一晚仅能诅咒1人。<br>
-              <strong>胜利目标：</strong>消灭所有神民与平民。
-            </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">猎人（数量：1）</div>
+          <div class="role-desc">
+            核心技能：非被毒杀出局时，可立即开枪带走1名任意玩家；若被血月使徒诅咒，出局后无法开枪。<br>
+            胜利目标：驱逐所有狼人。
+          </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">守卫（数量：1）</div>
+          <div class="role-desc">
+            核心技能：夜间守护1名玩家（每两晚不可守护同一人），可抵挡狼人击杀/女巫毒药；若被血月使徒诅咒，当晚无法守护。<br>
+            胜利目标：驱逐所有狼人。
+          </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">禁言长老（数量：1）</div>
+          <div class="role-desc">
+            核心技能：夜间禁言1名玩家（不可连续两晚禁言同一人）；若被血月使徒诅咒，当晚无法禁言。<br>
+            胜利目标：驱逐所有狼人。
+          </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">骑士（数量：1）</div>
+          <div class="role-desc">
+            核心技能：白天任意阶段可主动发动“单挑”1名玩家：1.若对方是狼人/未变狼的野孩子→对方出局，骑士转平民；2.若对方是好人→骑士出局；3.整局仅能发动1次。<br>
+            胜利目标：驱逐所有狼人。
           </div>
         </div>
       </div>
-
-      <!-- 神民阵营 -->
-      <div class="faction-section good-faction">
-        <h2>神民阵营</h2>
-        <div class="role-list">
-          <div class="role-card">
-            <div class="role-title">
-              预言家
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>夜间查验1人阵营（好人/狼人/中立；野孩子未变狼时显“中立”，变狼后显“狼人”）。<br>
-              <strong>胜利目标：</strong>驱逐所有狼人。
-            </div>
-          </div>
-          <div class="role-card">
-            <div class="role-title">
-              女巫
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>拥有解药（可救活被狼人击杀的玩家）、毒药（可毒杀1名任意玩家）各1瓶；若被血月使徒诅咒，当晚无法使用解药/毒药。<br>
-              <strong>胜利目标：</strong>驱逐所有狼人。
-            </div>
-          </div>
-          <div class="role-card">
-            <div class="role-title">
-              猎人
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>非被毒杀出局时，可立即开枪带走1名任意玩家；若被血月使徒诅咒，出局后无法开枪。<br>
-              <strong>胜利目标：</strong>驱逐所有狼人。
-            </div>
-          </div>
-          <div class="role-card">
-            <div class="role-title">
-              守卫
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>夜间守护1名玩家（每两晚不可守护同一人），可抵挡狼人击杀/女巫毒药；若被血月使徒诅咒，当晚无法守护。<br>
-              <strong>胜利目标：</strong>驱逐所有狼人。
-            </div>
-          </div>
-          <div class="role-card">
-            <div class="role-title">
-              禁言长老
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>夜间禁言1名玩家（不可连续两晚禁言同一人）；若被血月使徒诅咒，当晚无法禁言。<br>
-              <strong>胜利目标：</strong>驱逐所有狼人。
-            </div>
-          </div>
-          <div class="role-card">
-            <div class="role-title">
-              骑士
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>白天任意阶段可主动发动“单挑”1名玩家：1.若对方是狼人/未变狼的野孩子→对方出局，骑士转平民；2.若对方是好人→骑士出局；3.整局仅能发动1次。<br>
-              <strong>胜利目标：</strong>驱逐所有狼人。
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 平民阵营 -->
-      <div class="faction-section civilian-faction">
-        <h2>平民阵营</h2>
-        <div class="role-list">
-          <div class="role-card">
-            <div class="role-title">
-              普通平民
-              <span class="role-count">数量：2</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>无特殊技能；若被血月使徒诅咒，次日白天禁言（仅当晚诅咒生效，白天结束后恢复）。<br>
-              <strong>胜利目标：</strong>协助神民驱逐所有狼人。
-            </div>
-          </div>
-          <div class="role-card">
-            <div class="role-title">
-              老流氓
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>被狼人击杀/女巫毒杀后，次日白天可正常行动（发言、投票），白天结束后才正式出局；若被血月使徒诅咒，当晚仍触发“延迟出局”特性。<br>
-              <strong>胜利目标：</strong>协助神民驱逐所有狼人。
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 中立阵营 -->
-      <div class="faction-section neutral-faction">
-        <h2>中立阵营</h2>
-        <div class="role-list">
-          <div class="role-card">
-            <div class="role-title">
-              炸弹人
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>白天被放逐时，可选择报身份（淘汰所有投他的玩家）或不报身份（仅自己出局）；若被血月使徒诅咒，白天仍可发言/投票。<br>
-              <strong>胜利目标：</strong>报身份并淘汰至少1人后出局，单独胜利。
-            </div>
-          </div>
-          <div class="role-card">
-            <div class="role-title">
-              白痴
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>被投票放逐即单独胜利；若被血月使徒诅咒，白天仍可发言/投票（无夜间技能故不受影响）。<br>
-              <strong>胜利目标：</strong>被投票放逐即单独胜利（游戏立即结束）。
-            </div>
-          </div>
-          <div class="role-card">
-            <div class="role-title">
-              丘比特
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>首夜可选择2-3名玩家结成“链子”；若被血月使徒诅咒，首夜无法结链（技能失效）。<br>
-              <strong>胜利目标：</strong>链子全员存活至游戏结束，或链内至少1人所在阵营胜利。
-            </div>
-          </div>
-          <div class="role-card">
-            <div class="role-title">
-              野孩子
-              <span class="role-count">数量：1</span>
-            </div>
-            <div class="role-desc">
-              <strong>核心技能：</strong>1.首夜单独睁眼，选择1名玩家作为“榜样”；2.榜样存活时：无阵营（预言家查“中立”）；3.榜样出局后：自动转为普通狼人；4.被诅咒则首夜无法选榜样。<br>
-              <strong>胜利目标：</strong>榜样存活时无固定目标，榜样出局后协助狼队获胜。
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <a href="index.html" class="back-btn">返回登录页</a>
     </div>
+
+    <!-- 平民阵营 -->
+    <div class="faction-section">
+      <h2>平民阵营</h2>
+      <div class="role-list">
+        <div class="role-card">
+          <div class="role-title">普通平民（数量：2）</div>
+          <div class="role-desc">
+            核心技能：无特殊技能；若被血月使徒诅咒，次日白天禁言（仅当晚诅咒生效，白天结束后恢复）。<br>
+            胜利目标：协助神民驱逐所有狼人。
+          </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">老流氓（数量：1）</div>
+          <div class="role-desc">
+            核心技能：被狼人击杀/女巫毒杀后，次日白天可正常行动（发言、投票），白天结束后才正式出局；若被血月使徒诅咒，当晚仍触发“延迟出局”特性。<br>
+            胜利目标：协助神民驱逐所有狼人。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 中立阵营 -->
+    <div class="faction-section">
+      <h2>中立阵营</h2>
+      <div class="role-list">
+        <div class="role-card">
+          <div class="role-title">炸弹人（数量：1）</div>
+          <div class="role-desc">
+            核心技能：白天被放逐时，可选择报身份（淘汰所有投他的玩家）或不报身份（仅自己出局）；若被血月使徒诅咒，白天仍可发言/投票。<br>
+            胜利目标：报身份并淘汰至少1人后出局，单独胜利。
+          </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">白痴（数量：1）</div>
+          <div class="role-desc">
+            核心技能：被投票放逐即单独胜利；若被血月使徒诅咒，白天仍可发言/投票（无夜间技能故不受影响）。<br>
+            胜利目标：被投票放逐即单独胜利（游戏立即结束）。
+          </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">丘比特（数量：1）</div>
+          <div class="role-desc">
+            核心技能：首夜可选择2-3名玩家结成“链子”；若被血月使徒诅咒，首夜无法结链（技能失效）。<br>
+            胜利目标：链子全员存活至游戏结束，或链内至少1人所在阵营胜利。
+          </div>
+        </div>
+        <div class="role-card">
+          <div class="role-title">野孩子（数量：1）</div>
+          <div class="role-desc">
+            核心技能：1.首夜单独睁眼，选择1名玩家作为“榜样”；2.榜样存活时：无阵营（预言家查“中立”）；3.榜样出局后：自动转为普通狼人；4.被诅咒则首夜无法选榜样。<br>
+            胜利目标：榜样存活时无固定目标，榜样出局后协助狼队获胜。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="index.html" class="back-btn">返回登录页</a>
   </div>
 </body>
 </html>
