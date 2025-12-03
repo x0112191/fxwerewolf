@@ -1,401 +1,369 @@
+// 导入所有必需依赖（确保package.json里有这些依赖）
+const express = require('express');
 const WebSocket = require('ws');
 const http = require('http');
-const express = require('express');
+const crypto = require('crypto'); // 内置模块，生成房间号用
+
+// 初始化Express和HTTP服务器
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
 
-// 静态文件托管（Render需要，否则前端页面无法访问）
+// 核心配置1：托管所有前端文件（HTML、JS、CSS，让用户能访问页面）
 app.use(express.static(__dirname));
 
-// 游戏房间存储（key：房间号，value：房间信息）
+// 核心配置2：访问域名根路径（比如 fxwerewolf.vercel.app）时，自动打开首页index.html
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+
+// WebSocket服务器绑定到HTTP服务器（共享同一个端口）
+const wss = new WebSocket.Server({ server });
+
+// 存储房间数据（房间ID → 房间信息）
 const rooms = new Map();
+
+// 生成随机4位房间号（纯数字，方便用户记忆）
+function generateRoomId() {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+}
+
+// 生成角色列表（根据玩家人数分配狼人、村民等角色，按狼人杀常规规则）
+function generateRoleList(playerCount) {
+  const roles = [];
+  const wolfCount = Math.floor(playerCount / 3); // 狼人数量 = 玩家数/3（向下取整）
+  const seerCount = 1; // 预言家1名
+  const witchCount = 1; // 女巫1名
+  const hunterCount = 1; // 猎人1名
+  const villagerCount = playerCount - wolfCount - seerCount - witchCount - hunterCount; // 剩余为村民
+
+  // 添加狼人
+  for (let i = 0; i < wolfCount; i++) roles.push('狼人');
+  // 添加特殊角色
+  roles.push('预言家', '女巫', '猎人');
+  // 添加村民
+  for (let i = 0; i < villagerCount; i++) roles.push('村民');
+  // 打乱角色顺序（随机分配）
+  return roles.sort(() => Math.random() - 0.5);
+}
+
+// 广播消息到房间内所有玩家
+function broadcastToRoom(roomId, message) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+  room.players.forEach(player => {
+    if (player.ws.readyState === WebSocket.OPEN) {
+      player.ws.send(JSON.stringify(message));
+    }
+  });
+}
 
 // 处理WebSocket连接
 wss.on('connection', (ws) => {
-    let currentRoom = null;
-    let playerId = null;
+  console.log('新玩家连接到服务器');
 
-    // 处理消息
-    ws.on('message', (message) => {
-        try {
-            const data = JSON.parse(message);
-            console.log('收到消息:', data);
+  // 存储当前玩家信息（连接后初始化）
+  let currentPlayer = null;
+  let currentRoomId = null;
 
-            switch(data.type) {
-                // 创建房间
-                case 'createRoom':
-                    const roomId = data.roomId || Math.floor(100000 + Math.random() * 900000).toString();
-                    const hostId = data.playerId;
-                    
-                    // 检查房间是否已存在
-                    if (rooms.has(roomId)) {
-                        ws.send(JSON.stringify({
-                            type: 'createFailed',
-                            reason: '房间已存在'
-                        }));
-                        return;
-                    }
+  // 接收前端发送的消息
+  ws.on('message', (data) => {
+    try {
+      const message = JSON.parse(data); // 解析前端发送的JSON消息
+      console.log('收到消息:', message);
 
-                    // 创建新房间
-                    rooms.set(roomId, {
-                        id: roomId,
-                        host: hostId,
-                        password: data.password || '',
-                        gameMode: data.gameMode || 'standard',
-                        players: [{
-                            id: hostId,
-                            name: data.playerName,
-                            ws: ws,
-                            isHost: true
-                        }],
-                        gameState: {
-                            phase: 'waiting',
-                            started: false,
-                            roleConfig: {}
-                        }
-                    });
-                    
-                    currentRoom = roomId;
-                    playerId = hostId;
-                    
-                    // 回复创建成功
-                    ws.send(JSON.stringify({
-                        type: 'roomCreated',
-                        roomId: roomId,
-                        isHost: true
-                    }));
-                    
-                    // 广播房间内玩家列表更新
-                    broadcastToRoom(roomId, {
-                        type: 'playerListUpdate',
-                        players: rooms.get(roomId).players.map(p => ({id: p.id, name: p.name, isHost: p.isHost}))
-                    });
-                    break;
-                    
-                // 加入房间
-                case 'joinRoom':
-                    const joinRoom = rooms.get(data.roomId);
-                    if (!joinRoom) {
-                        ws.send(JSON.stringify({
-                            type: 'joinFailed',
-                            reason: '房间不存在'
-                        }));
-                        return;
-                    }
+      // 根据消息类型处理不同逻辑
+      switch (message.type) {
+        // 1. 创建房间
+        case 'createRoom': {
+          const { playerName, roomPassword } = message;
+          const roomId = generateRoomId(); // 生成唯一房间号
+          currentRoomId = roomId;
 
-                    // 验证密码
-                    if (joinRoom.password && joinRoom.password !== data.password) {
-                        ws.send(JSON.stringify({
-                            type: 'joinFailed',
-                            reason: '密码错误'
-                        }));
-                        return;
-                    }
+          // 创建新玩家（房主）
+          currentPlayer = {
+            id: crypto.randomUUID(), // 生成唯一玩家ID
+            name: playerName,
+            isHost: true, // 创建者是房主
+            ws: ws // 绑定当前WebSocket连接
+          };
 
-                    // 检查房间是否已满
-                    if (joinRoom.players.length >= 12) {
-                        ws.send(JSON.stringify({
-                            type: 'joinFailed',
-                            reason: '房间已满'
-                        }));
-                        return;
-                    }
+          // 创建新房间
+          rooms.set(roomId, {
+            id: roomId,
+            password: roomPassword || '', // 房间密码（可选）
+            players: [currentPlayer], // 房间内玩家列表
+            host: currentPlayer.id, // 房主ID
+            isGameStarted: false // 游戏是否已开始
+          });
 
-                    // 检查玩家是否已在房间内
-                    const isAlreadyInRoom = joinRoom.players.some(p => p.id === data.playerId);
-                    if (isAlreadyInRoom) {
-                        ws.send(JSON.stringify({
-                            type: 'joinFailed',
-                            reason: '你已在房间内'
-                        }));
-                        return;
-                    }
+          // 回复前端：创建房间成功
+          ws.send(JSON.stringify({
+            type: 'roomCreated',
+            success: true,
+            roomId: roomId,
+            playerId: currentPlayer.id,
+            isHost: true
+          }));
 
-                    // 加入房间
-                    currentRoom = data.roomId;
-                    playerId = data.playerId;
-                    
-                    joinRoom.players.push({
-                        id: data.playerId,
-                        name: data.playerName,
-                        ws: ws,
-                        isHost: false
-                    });
-                    
-                    // 回复加入成功
-                    ws.send(JSON.stringify({
-                        type: 'joinedRoom',
-                        roomId: joinRoom.id,
-                        players: joinRoom.players.map(p => ({id: p.id, name: p.name, isHost: p.isHost})),
-                        host: joinRoom.host
-                    }));
-                    
-                    // 广播房间内其他玩家
-                    broadcastToRoom(joinRoom.id, {
-                        type: 'playerJoined',
-                        players: joinRoom.players.map(p => ({id: p.id, name: p.name, isHost: p.isHost})),
-                        joinedPlayer: {id: data.playerId, name: data.playerName}
-                    });
-                    
-                    // 8人时触发房主选举（如果还没有房主）
-                    if (joinRoom.players.length >= 8 && !joinRoom.host) {
-                        const randomHostIndex = Math.floor(Math.random() * joinRoom.players.length);
-                        const newHost = joinRoom.players[randomHostIndex];
-                        joinRoom.host = newHost.id;
-                        newHost.isHost = true;
-                        
-                        // 广播房主变更
-                        broadcastToRoom(joinRoom.id, {
-                            type: 'hostElected',
-                            hostId: newHost.id,
-                            hostName: newHost.name,
-                            players: joinRoom.players.map(p => ({id: p.id, name: p.name, isHost: p.isHost}))
-                        });
-                    }
-                    break;
-                    
-                // 选举房主（客户端触发）
-                case 'electHost':
-                    const electRoom = rooms.get(data.roomId);
-                    if (!electRoom || electRoom.host === data.hostId) return;
-                    
-                    // 更新房主信息
-                    electRoom.host = data.hostId;
-                    electRoom.players.forEach(p => {
-                        p.isHost = (p.id === data.hostId);
-                    });
-                    
-                    // 广播房主变更
-                    broadcastToRoom(electRoom.id, {
-                        type: 'hostElected',
-                        hostId: data.hostId,
-                        hostName: electRoom.players.find(p => p.id === data.hostId).name,
-                        players: electRoom.players.map(p => ({id: p.id, name: p.name, isHost: p.isHost}))
-                    });
-                    break;
-                    
-                // 提交角色配置
-                case 'submitRoleConfig':
-                    const configRoom = rooms.get(data.roomId);
-                    if (!configRoom || configRoom.host !== data.playerId) return;
-                    
-                    // 保存角色配置
-                    configRoom.gameState.roleConfig = data.roleConfig;
-                    
-                    // 广播角色配置完成
-                    broadcastToRoom(configRoom.id, {
-                        type: 'roleConfigSubmitted',
-                        roleConfig: data.roleConfig
-                    });
-                    break;
-                    
-                // 开始游戏
-                case 'startGame':
-                    const gameRoom = rooms.get(data.roomId);
-                    if (!gameRoom || gameRoom.host !== data.playerId) return;
-                    
-                    // 检查玩家数是否足够（至少8人）
-                    if (gameRoom.players.length < 8) {
-                        ws.send(JSON.stringify({
-                            type: 'startFailed',
-                            reason: '至少需要8名玩家才能开始游戏'
-                        }));
-                        return;
-                    }
-                    
-                    // 检查角色配置是否存在
-                    if (!Object.keys(gameRoom.gameState.roleConfig).length) {
-                        ws.send(JSON.stringify({
-                            type: 'startFailed',
-                            reason: '请先配置角色'
-                        }));
-                        return;
-                    }
-                    
-                    // 初始化游戏状态
-                    gameRoom.gameState.started = true;
-                    gameRoom.gameState.phase = 'night';
-                    
-                    // 分配角色
-                    const roleList = generateRoleList(gameRoom.gameState.roleConfig, gameRoom.players.length);
-                    const playersWithRoles = gameRoom.players.map((player, index) => ({
-                        id: player.id,
-                        name: player.name,
-                        role: roleList[index],
-                        isAlive: true
-                    }));
-                    gameRoom.gameState.players = playersWithRoles;
-                    
-                    // 给每个玩家发送自己的角色
-                    gameRoom.players.forEach((player, index) => {
-                        player.ws.send(JSON.stringify({
-                            type: 'gameStarted',
-                            role: roleList[index],
-                            gameState: {
-                                phase: gameRoom.gameState.phase,
-                                started: true
-                            }
-                        }));
-                    });
-                    
-                    // 广播游戏开始（不包含他人角色）
-                    broadcastToRoom(gameRoom.id, {
-                        type: 'gameStartedBroadcast',
-                        gameState: {
-                            phase: gameRoom.gameState.phase,
-                            started: true,
-                            playerCount: gameRoom.players.length
-                        }
-                    });
-                    break;
-                    
-                // 离开房间
-                case 'leaveRoom':
-                    if (currentRoom && playerId) {
-                        const leaveRoom = rooms.get(currentRoom);
-                        if (leaveRoom) {
-                            // 移除玩家
-                            leaveRoom.players = leaveRoom.players.filter(p => p.id !== playerId);
-                            
-                            // 如果房主离开，重新选举房主（如果还有玩家）
-                            if (leaveRoom.host === playerId && leaveRoom.players.length > 0) {
-                                leaveRoom.host = leaveRoom.players[0].id;
-                                leaveRoom.players[0].isHost = true;
-                                
-                                // 广播新房主
-                                broadcastToRoom(leaveRoom.id, {
-                                    type: 'hostElected',
-                                    hostId: leaveRoom.host,
-                                    hostName: leaveRoom.players[0].name,
-                                    players: leaveRoom.players.map(p => ({id: p.id, name: p.name, isHost: p.isHost}))
-                                });
-                            } else {
-                                // 广播玩家离开
-                                broadcastToRoom(leaveRoom.id, {
-                                    type: 'playerLeft',
-                                    playerId: playerId,
-                                    players: leaveRoom.players.map(p => ({id: p.id, name: p.name, isHost: p.isHost}))
-                                });
-                            }
-                            
-                            // 如果房间为空，删除房间
-                            if (leaveRoom.players.length === 0) {
-                                rooms.delete(currentRoom);
-                            }
-                        }
-                    }
-                    break;
-                    
-                // 发送聊天消息
-                case 'chatMessage':
-                    if (currentRoom) {
-                        const chatRoom = rooms.get(currentRoom);
-                        if (chatRoom) {
-                            broadcastToRoom(currentRoom, {
-                                type: 'newChatMessage',
-                                playerId: playerId,
-                                playerName: chatRoom.players.find(p => p.id === playerId).name,
-                                message: data.message,
-                                time: new Date().toLocaleTimeString()
-                            });
-                        }
-                    }
-                    break;
-            }
-        } catch (error) {
-            console.error('消息处理错误:', error);
+          // 广播房间内玩家列表更新（只有房主自己）
+          broadcastToRoom(roomId, {
+            type: 'playerListUpdate',
+            players: rooms.get(roomId).players.map(p => ({
+              id: p.id,
+              name: p.name,
+              isHost: p.isHost
+            }))
+          });
+          break;
+        }
+
+        // 2. 加入房间
+        case 'joinRoom': {
+          const { roomId, playerName, roomPassword } = message;
+          const room = rooms.get(roomId);
+
+          // 检查房间是否存在
+          if (!room) {
             ws.send(JSON.stringify({
-                type: 'error',
-                message: '服务器处理消息失败'
+              type: 'joinRoomResult',
+              success: false,
+              message: '房间不存在！'
             }));
-        }
-    });
+            return;
+          }
 
-    // 处理断开连接
-    ws.on('close', () => {
-        console.log('玩家断开连接:', playerId);
-        if (currentRoom && playerId) {
-            const room = rooms.get(currentRoom);
-            if (room) {
-                // 移除玩家
-                room.players = room.players.filter(p => p.id !== playerId);
-                
-                // 房主断开，重新选举房主
-                if (room.host === playerId && room.players.length > 0) {
-                    room.host = room.players[0].id;
-                    room.players[0].isHost = true;
-                    
-                    broadcastToRoom(room.id, {
-                        type: 'hostElected',
-                        hostId: room.host,
-                        hostName: room.players[0].name,
-                        players: room.players.map(p => ({id: p.id, name: p.name, isHost: p.isHost}))
-                    });
-                } else if (room.players.length > 0) {
-                    // 广播玩家离开
-                    broadcastToRoom(room.id, {
-                        type: 'playerLeft',
-                        playerId: playerId,
-                        players: room.players.map(p => ({id: p.id, name: p.name, isHost: p.isHost}))
-                    });
-                } else {
-                    // 房间为空，删除房间
-                    rooms.delete(currentRoom);
-                }
-            }
-        }
-    });
+          // 检查房间是否已满（假设最多12人，可调整）
+          if (room.players.length >= 12) {
+            ws.send(JSON.stringify({
+              type: 'joinRoomResult',
+              success: false,
+              message: '房间已满！'
+            }));
+            return;
+          }
 
-    // 处理错误
-    ws.on('error', (error) => {
-        console.error('WebSocket错误:', error);
-    });
+          // 检查房间密码是否正确
+          if (room.password && room.password !== roomPassword) {
+            ws.send(JSON.stringify({
+              type: 'joinRoomResult',
+              success: false,
+              message: '密码错误！'
+            }));
+            return;
+          }
+
+          // 检查游戏是否已开始（已开始不能加入）
+          if (room.isGameStarted) {
+            ws.send(JSON.stringify({
+              type: 'joinRoomResult',
+              success: false,
+              message: '游戏已开始，无法加入！'
+            }));
+            return;
+          }
+
+          // 创建新玩家（普通玩家）
+          currentPlayer = {
+            id: crypto.randomUUID(),
+            name: playerName,
+            isHost: false,
+            ws: ws
+          };
+          currentRoomId = roomId;
+
+          // 添加玩家到房间
+          room.players.push(currentPlayer);
+
+          // 回复前端：加入房间成功
+          ws.send(JSON.stringify({
+            type: 'joinRoomResult',
+            success: true,
+            roomId: roomId,
+            playerId: currentPlayer.id,
+            isHost: false
+          }));
+
+          // 广播房间内所有玩家：玩家列表更新
+          broadcastToRoom(roomId, {
+            type: 'playerListUpdate',
+            players: room.players.map(p => ({
+              id: p.id,
+              name: p.name,
+              isHost: p.isHost
+            }))
+          });
+          break;
+        }
+
+        // 3. 房主开始游戏
+        case 'startGame': {
+          const { roomId } = message;
+          const room = rooms.get(roomId);
+
+          // 检查是否是房主
+          if (room.host !== currentPlayer.id) {
+            ws.send(JSON.stringify({
+              type: 'startGameResult',
+              success: false,
+              message: '只有房主能开始游戏！'
+            }));
+            return;
+          }
+
+          // 检查玩家数量是否足够（最少4人）
+          if (room.players.length < 4) {
+            ws.send(JSON.stringify({
+              type: 'startGameResult',
+              success: false,
+              message: '玩家数量不足4人，无法开始游戏！'
+            }));
+            return;
+          }
+
+          // 标记游戏已开始
+          room.isGameStarted = true;
+
+          // 生成角色列表并分配给每个玩家
+          const roleList = generateRoleList(room.players.length);
+          room.players.forEach((player, index) => {
+            player.role = roleList[index]; // 给每个玩家分配角色
+            // 单独给当前玩家发送他的角色（避免其他人看到）
+            player.ws.send(JSON.stringify({
+              type: 'assignRole',
+              role: player.role
+            }));
+          });
+
+          // 广播给所有玩家：游戏开始
+          broadcastToRoom(roomId, {
+            type: 'gameStarted',
+            playerCount: room.players.length
+          });
+          break;
+        }
+
+        // 4. 聊天消息（玩家之间实时聊天）
+        case 'chatMessage': {
+          const { roomId, content } = message;
+          const room = rooms.get(roomId);
+          if (!room) return;
+
+          // 广播聊天消息给房间内所有玩家
+          broadcastToRoom(roomId, {
+            type: 'newChatMessage',
+            playerName: currentPlayer.name,
+            content: content,
+            time: new Date().toLocaleTimeString() // 消息时间
+          });
+          break;
+        }
+
+        // 5. 玩家离开房间
+        case 'leaveRoom': {
+          const { roomId, playerId } = message;
+          const room = rooms.get(roomId);
+          if (!room) return;
+
+          // 移除当前玩家
+          room.players = room.players.filter(p => p.id !== playerId);
+
+          // 如果房主离开，重新选举第一个玩家为房主
+          if (room.host === playerId && room.players.length > 0) {
+            const newHost = room.players[0];
+            room.host = newHost.id;
+            newHost.isHost = true;
+
+            // 广播房主变更
+            broadcastToRoom(roomId, {
+              type: 'hostChanged',
+              newHostId: newHost.id,
+              newHostName: newHost.name
+            });
+          }
+
+          // 广播玩家离开
+          broadcastToRoom(roomId, {
+            type: 'playerLeft',
+            playerId: playerId,
+            players: room.players.map(p => ({
+              id: p.id,
+              name: p.name,
+              isHost: p.isHost
+            }))
+          });
+
+          // 如果房间为空，删除房间
+          if (room.players.length === 0) {
+            rooms.delete(roomId);
+          }
+
+          // 重置当前玩家和房间信息
+          currentPlayer = null;
+          currentRoomId = null;
+          break;
+        }
+
+        // 其他消息类型（默认忽略）
+        default:
+          console.log('未知消息类型:', message.type);
+      }
+    } catch (error) {
+      console.error('解析消息失败:', error);
+    }
+  });
+
+  // 处理玩家断开连接
+  ws.on('close', () => {
+    console.log('玩家断开连接');
+    if (currentPlayer && currentRoomId) {
+      const room = rooms.get(currentRoomId);
+      if (room) {
+        // 自动移除断开连接的玩家
+        room.players = room.players.filter(p => p.id !== currentPlayer.id);
+
+        // 重新选举房主（如果需要）
+        if (room.host === currentPlayer.id && room.players.length > 0) {
+          const newHost = room.players[0];
+          room.host = newHost.id;
+          newHost.isHost = true;
+          broadcastToRoom(currentRoomId, {
+            type: 'hostChanged',
+            newHostId: newHost.id,
+            newHostName: newHost.name
+          });
+        }
+
+        // 广播玩家离开
+        broadcastToRoom(currentRoomId, {
+          type: 'playerLeft',
+          playerId: currentPlayer.id,
+          players: room.players.map(p => ({
+            id: p.id,
+            name: p.name,
+            isHost: p.isHost
+          }))
+        });
+
+        // 房间为空则删除
+        if (room.players.length === 0) {
+          rooms.delete(currentRoomId);
+        }
+      }
+    }
+  });
+
+  // 处理连接错误
+  ws.on('error', (error) => {
+    console.error('WebSocket错误:', error);
+  });
 });
 
-// 向房间内所有玩家广播消息
-function broadcastToRoom(roomId, message) {
-    const room = rooms.get(roomId);
-    if (room) {
-        const messageStr = JSON.stringify(message);
-        room.players.forEach(player => {
-            if (player.ws.readyState === WebSocket.OPEN) {
-                player.ws.send(messageStr);
-            }
-        });
-    }
-}
+// 监听端口（兼容Vercel自动分配的端口和本地测试端口）
+const port = process.env.PORT || 3000;
+server.listen(port, () => {
+  console.log(`服务器已启动，监听端口 ${port}`);
+  console.log(`本地访问地址: http://localhost:${port}`);
+  console.log(`公网访问地址: https://你的Vercel域名.vercel.app`);
+});
 
-// 根据角色配置生成角色列表
-function generateRoleList(roleConfig, playerCount) {
-    const roleList = [];
-
-    // 添加狼人阵营
-    for (let i = 0; i < roleConfig.normalWolf; i++) roleList.push('普通狼人');
-    for (let i = 0; i < roleConfig.whiteWolf; i++) roleList.push('白狼王');
-
-    // 添加好人阵营-神职
-    for (let i = 0; i < roleConfig.seer; i++) roleList.push('预言家');
-    for (let i = 0; i < roleConfig.witch; i++) roleList.push('女巫');
-    for (let i = 0; i < roleConfig.hunter; i++) roleList.push('猎人');
-    for (let i = 0; i < roleConfig.guard; i++) roleList.push('守卫');
-
-    // 添加好人阵营-平民
-    for (let i = 0; i < roleConfig.civilian; i++) roleList.push('普通平民');
-
-    // 添加中立阵营
-    for (let i = 0; i < roleConfig.idiot; i++) roleList.push('白痴');
-
-    // 随机打乱角色列表（确保公平）
-    roleList.sort(() => Math.random() - 0.5);
-
-    // 确保角色列表长度等于玩家数（防止配置错误）
-    return roleList.slice(0, playerCount);
-}
-
-// 启动服务器（Render会自动分配PORT，必须用process.env.PORT）
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`服务器运行在端口 ${PORT}`);
-    console.log(`访问地址: http://localhost:${PORT}`);
 });
