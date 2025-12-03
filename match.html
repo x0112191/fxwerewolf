@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>狼人杀 - 自定义房间</title>
+  <title>狼人杀 - 自定义房间登录</title>
   <style>
     * {
       margin: 0;
@@ -11,606 +11,229 @@
       font-family: 'Microsoft YaHei', Arial, sans-serif;
     }
     body {
-      background: #f5f5f5;
+      min-height: 100vh;
+      background: #f5f5f5; /* 保留原有浅色背景 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
-      color: #333;
     }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #e9ecef;
-    }
-    h1 {
-      color: #333;
-      font-size: 24px;
-    }
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    .header-right span {
-      font-size: 16px;
-      color: #666;
-    }
-    .header-right button {
-      padding: 8px 16px;
-      background: #dc3545;
-      border: none;
-      color: white;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .header-right button:hover {
-      background: #c82333;
-    }
-    /* 核心布局：左玩家列表（滑动）+ 右聊天框（滑动） */
-    .container {
+    .main-container {
       display: flex;
       gap: 30px;
-      height: 650px; /* 固定高度，确保滑动 */
+      align-items: flex-start;
     }
-    /* 左：玩家列表（滑动） */
-    .player-panel {
-      width: 300px;
+    /* 密钥登录窗口（原有蓝色系） */
+    .key-login-container {
       background: white;
+      padding: 35px;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 20px;
-      border-top: 3px solid #007bff;
-      overflow-y: auto; /* 支持滑动 */
+      width: 400px;
+      border-top: 4px solid #007bff;
     }
-    /* 右：聊天框+房间信息（滑动） */
-    .right-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .chat-panel {
-      flex: 1;
+    /* 管理员窗口（原有绿色系，默认显示） */
+    .admin-container {
       background: white;
+      padding: 35px;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 20px;
-      border-top: 3px solid #17a2b8;
-      display: flex;
-      flex-direction: column;
-      height: 400px; /* 固定高度，确保滑动 */
+      width: 350px;
+      border-top: 4px solid #28a745;
     }
-    .room-info {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 20px;
-      border-top: 3px solid #28a745;
-    }
-    .panel-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 15px;
+    h1, h2 {
+      margin-bottom: 25px;
       color: #333;
-      border-bottom: 1px solid #e9ecef;
-      padding-bottom: 10px;
-    }
-    /* 玩家列表样式 */
-    .player-item {
-      padding: 12px;
-      background: #f8f9fa;
-      border-radius: 4px;
-      margin-bottom: 10px;
-      border-left: 3px solid #007bff;
-      transition: background 0.3s;
-    }
-    .player-item:hover {
-      background: #e6f7ff;
-    }
-    .player-item.self {
-      background: #e6f7ff;
-      border-left: 3px solid #dc3545;
-      font-weight: 600;
-    }
-    .player-role {
-      font-size: 13px;
-      color: #666;
-      margin-top: 5px;
-    }
-    /* 聊天框样式（滑动） */
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto; /* 支持滑动 */
-      margin-bottom: 15px;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 4px;
-      border: 1px solid #e9ecef;
-    }
-    .message {
-      margin: 8px 0;
-      padding: 10px 12px;
-      border-radius: 4px;
-      max-width: 80%;
-      line-height: 1.6;
-      font-size: 14px;
-    }
-    .my-message {
-      background: #e6f7ff;
-      color: #007bff;
-      margin-left: auto;
-    }
-    .other-message {
-      background: #f1f3f5;
-      color: #333;
-      margin-right: auto;
-    }
-    .system-message {
-      background: #fff3cd;
-      color: #856404;
-      margin: 10px auto;
-      max-width: 60%;
+      font-size: 22px;
       text-align: center;
     }
-    .voice-message {
-      background: #f0f8fb;
-      color: #17a2b8;
-      padding: 10px;
-      border-radius: 4px;
-      max-width: 80%;
-      margin-right: auto;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    h2 {
+      font-size: 20px;
     }
-    .chat-input {
-      display: flex;
-      gap: 10px;
+    .input-group {
+      margin: 20px 0;
+      text-align: left;
     }
-    #chatInput {
-      flex: 1;
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #666;
+      font-size: 14px;
+    }
+    input {
+      width: 100%;
       padding: 12px 15px;
       background: #f8f9fa;
       border: 1px solid #ced4da;
       border-radius: 4px;
-      font-size: 14px;
+      font-size: 16px;
       color: #333;
+      transition: border 0.3s;
     }
-    .chat-btn {
-      padding: 12px 20px;
+    input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
       border: none;
       border-radius: 4px;
-      font-size: 14px;
+      font-size: 16px;
       cursor: pointer;
+      font-weight: 500;
       transition: background 0.3s;
     }
-    .send-btn {
+    .login-btn {
       background: #007bff;
       color: white;
+      margin-top: 10px;
     }
-    .voice-btn {
-      background: #17a2b8;
+    .login-btn:hover {
+      background: #0069d9;
+    }
+    .admin-btn {
+      background: #28a745;
       color: white;
+      margin-top: 10px;
     }
-    /* 房间信息样式 */
-    .info-section {
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #e9ecef;
+    .admin-btn:hover {
+      background: #218838;
     }
-    .info-section:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-    }
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      font-size: 14px;
-    }
-    .info-label {
-      color: #666;
-    }
-    .info-value {
-      color: #333;
-      font-weight: 500;
-    }
-    /* 自定义角色设置（房主专用） */
-    .role-setting {
-      background: #f8f9fa;
-      border-radius: 4px;
-      border: 1px solid #e9ecef;
-      padding: 15px;
+    #error-msg {
+      color: #dc3545;
       margin-top: 15px;
-    }
-    .role-setting-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 15px;
-      color: #333;
-    }
-    .role-list {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-    .role-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      height: 20px;
+      text-align: center;
       font-size: 14px;
     }
-    .role-item input {
-      width: auto;
-      margin-right: 5px;
-    }
-    .start-game-btn {
-      width: 100%;
-      padding: 14px;
+    .rule-link {
       margin-top: 20px;
-      background: #ffc107;
-      color: #333;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s;
+      display: block;
+      color: #007bff;
+      text-decoration: none;
+      text-align: center;
+      font-size: 14px;
     }
-    .start-game-btn:disabled {
-      background: #e9ecef;
-      color: #666;
-      cursor: not-allowed;
+    .rule-link:hover {
+      text-decoration: underline;
     }
-    /* 语音录制提示 */
-    .voice-tip {
-      font-size: 12px;
+    /* 模式切换（仅自定义模式，隐藏其他） */
+    .mode-note {
+      text-align: center;
       color: #666;
-      margin-top: 5px;
-      text-align: right;
+      font-size: 13px;
+      margin: 10px 0;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>房间号：<span id="roomId"></span>（自定义角色模式）</h1>
-    <div class="header-right">
-      <span>用户名：<span id="username"></span></span>
-      <button onclick="leaveRoom()">离开房间</button>
-    </div>
-  </div>
+  <div class="main-container">
+    <!-- 密钥登录窗口 -->
+    <div class="key-login-container">
+      <h1>狼人杀 - 自定义房间登录</h1>
+      <div class="mode-note">仅支持自定义角色模式（房主可设置角色数量）</div>
 
-  <div class="container">
-    <!-- 左：玩家列表（滑动） -->
-    <div class="player-panel">
-      <div class="panel-title">玩家列表（当前<span id="playerCount">1</span>/<span id="maxPlayers">20</span>）</div>
-      <div id="playerList"></div>
-    </div>
-
-    <!-- 右：聊天框+房间信息 -->
-    <div class="right-panel">
-      <!-- 聊天框（滑动+语音） -->
-      <div class="chat-panel">
-        <div class="panel-title">聊天区域（白天：语音≤2秒/条，最多3条；晚上：文字≤10字）</div>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="chat-input">
-          <input type="text" id="chatInput" placeholder="输入聊天内容..." />
-          <button class="chat-btn send-btn" onclick="sendChat()">发送</button>
-          <button class="chat-btn voice-btn" id="voiceBtn" onclick="toggleVoiceRecord()">按住说话</button>
-        </div>
-        <div class="voice-tip">今日语音剩余：<span id="voiceRemain">3</span>条</div>
-        <audio id="audioPlayer" controls></audio>
+      <!-- 房间号输入（创建/加入统一输入，自动识别） -->
+      <div class="input-group">
+        <label for="roomId">输入房间号（6位数字）</label>
+        <input type="text" id="roomId" placeholder="6位数字房间号" required>
       </div>
 
-      <!-- 房间信息+自定义角色设置 -->
-      <div class="room-info">
-        <div class="info-section">
-          <div class="panel-title">房间规则</div>
-          <div class="info-item">
-            <span class="info-label">人数限制：</span>
-            <span class="info-value">7-20人（≥7人可开）</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">白天发言：</span>
-            <span class="info-value">轮流制（仅轮到时可畅所欲言）</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">警长竞选：</span>
-            <span class="info-value">支持入水/退水，未竞选者投票</span>
-          </div>
-        </div>
-
-        <!-- 房主：自定义角色设置 -->
-        <div id="roleSettingPanel" class="role-setting" style="display: none;">
-          <div class="role-setting-title">自定义角色选择（至少选择6个角色）</div>
-          <div class="role-list">
-            <!-- 狼人阵营 -->
-            <div class="role-item"><input type="checkbox" id="role1" checked> 普通狼人</div>
-            <div class="role-item"><input type="checkbox" id="role2" checked> 白狼王</div>
-            <div class="role-item"><input type="checkbox" id="role3"> 血月使徒</div>
-            <!-- 神民阵营 -->
-            <div class="role-item"><input type="checkbox" id="role4" checked> 预言家</div>
-            <div class="role-item"><input type="checkbox" id="role5" checked> 女巫</div>
-            <div class="role-item"><input type="checkbox" id="role6" checked> 猎人</div>
-            <div class="role-item"><input type="checkbox" id="role7"> 守卫</div>
-            <div class="role-item"><input type="checkbox" id="role8"> 禁言长老</div>
-            <div class="role-item"><input type="checkbox" id="role9"> 骑士</div>
-            <!-- 平民阵营 -->
-            <div class="role-item"><input type="checkbox" id="role10" checked> 普通平民</div>
-            <div class="role-item"><input type="checkbox" id="role11"> 老流氓</div>
-            <!-- 中立阵营 -->
-            <div class="role-item"><input type="checkbox" id="role12"> 炸弹人</div>
-            <div class="role-item"><input type="checkbox" id="role13"> 白痴</div>
-            <div class="role-item"><input type="checkbox" id="role14"> 丘比特</div>
-            <div class="role-item"><input type="checkbox" id="role15"> 野孩子</div>
-          </div>
-        </div>
-
-        <button id="startGameBtn" class="start-game-btn" disabled>等待玩家加入（需≥7人）</button>
+      <!-- 用户名输入（恢复用户名，确保左边列表显示） -->
+      <div class="input-group">
+        <label for="username">输入用户名</label>
+        <input type="text" id="username" placeholder="2-8个字符" required>
       </div>
+
+      <!-- 密钥输入（保留原有密钥机制） -->
+      <div class="input-group">
+        <label for="key">输入登录密钥</label>
+        <input type="text" id="key" placeholder="至少6个字符" required>
+      </div>
+
+      <!-- 创建/加入按钮 -->
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="btn login-btn" style="flex:1" onclick="confirmOperate('create')">创建房间（房主）</button>
+        <button class="btn login-btn" style="flex:1; background:#6c757d" onclick="confirmOperate('join')">加入房间</button>
+      </div>
+
+      <div id="error-msg"></div>
+      <a href="rules.html" class="rule-link">查看完整角色规则</a>
+    </div>
+
+    <!-- 管理员窗口（默认显示） -->
+    <div class="admin-container">
+      <h2>管理员操作</h2>
+      <div class="input-group">
+        <label for="admin-key">管理员密钥（默认已配置）</label>
+        <input type="text" id="admin-key" value="admin_default_key" readonly>
+      </div>
+      <div class="input-group">
+        <label for="operate-type">操作类型</label>
+        <select id="operate-type" style="width:100%; padding:12px; border-radius:4px; border:1px solid #ced4da;">
+          <option value="resetRoom">重置房间</option>
+          <option value="kickPlayer">踢出玩家</option>
+          <option value="closeRoom">关闭房间</option>
+        </select>
+      </div>
+      <button class="btn admin-btn" onclick="adminOperate()">执行操作</button>
+      <div id="admin-msg" style="color:#28a745; margin-top:15px; text-align:center; font-size:14px;"></div>
     </div>
   </div>
 
   <script>
-    // 获取URL参数
-    const params = new URLSearchParams(window.location.search);
-    const roomId = params.get('roomId');
-    const username = params.get('username');
-    const key = params.get('key');
-    const isHost = params.get('isHost') === 'true';
+    // 确认创建/加入房间
+    function confirmOperate(type) {
+      const roomId = document.getElementById('roomId').value.trim();
+      const username = document.getElementById('username').value.trim();
+      const key = document.getElementById('key').value.trim();
+      const errorMsg = document.getElementById('error-msg');
 
-    // 初始化页面
-    document.getElementById('roomId').textContent = roomId;
-    document.getElementById('username').textContent = username;
-
-    // 全局变量
-    let ws = new WebSocket('wss://你的服务器IP:3000');
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let voiceRemain = 3; // 白天语音剩余条数
-    let isNight = false; // 是否夜间（控制文字长度）
-    window.voiceMessages = {};
-
-    // 房主显示角色设置面板
-    if (isHost) {
-      document.getElementById('roleSettingPanel').style.display = 'block';
-    }
-
-    // WebSocket连接
-    ws.onopen = () => {
-      ws.send(JSON.stringify({
-        type: isHost ? 'createRoom' : 'joinRoom',
-        roomId,
-        username,
-        key
-      }));
-    };
-
-    // 接收消息
-    ws.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      handleMessage(data);
-    };
-
-    // 处理服务器消息
-    function handleMessage(data) {
-      switch (data.type) {
-        case 'playerJoin':
-          document.getElementById('playerCount').textContent = data.playerCount;
-          addPlayerItem(data.username, data.isSelf);
-          addChatMessage(`系统消息：${data.username}加入房间`, 'system');
-          checkStartGameBtn(data.playerCount);
-          break;
-        case 'playerLeave':
-          addChatMessage(`系统消息：${data.username}离开房间`, 'system');
-          removePlayerItem(data.username);
-          checkStartGameBtn(document.getElementById('playerCount').textContent);
-          break;
-        case 'chatBroadcast':
-          const isMyMsg = data.username === username;
-          addChatMessage(`${data.username}（${data.time}）：${data.content}`, isMyMsg ? 'my' : 'other');
-          break;
-        case 'voiceBroadcast':
-          window.voiceMessages[data.voiceId] = data.content;
-          addVoiceMessage(data.username, data.time, data.voiceId);
-          break;
-        case 'nightMode':
-          isNight = true;
-          addChatMessage('【系统通知】进入夜间阶段，文字消息≤10字！', 'system');
-          break;
-        case 'dayMode':
-          isNight = false;
-          voiceRemain = 3; // 重置语音条数
-          document.getElementById('voiceRemain').textContent = voiceRemain;
-          addChatMessage('【系统通知】进入白天阶段，轮到发言时可畅所欲言！', 'system');
-          break;
-        case 'assignRole':
-          // 发牌动画（跳转到游戏页时触发）
-          setTimeout(() => {
-            window.location.href = `game.html?roomId=${roomId}&username=${username}&role=${data.role}&isHost=${isHost}`;
-          }, 1500);
-          break;
+      // 验证参数
+      if (!roomId || roomId.length !== 6 || isNaN(roomId)) {
+        errorMsg.textContent = '请输入6位数字房间号！';
+        return;
       }
-    }
-
-    // 添加玩家到列表
-    function addPlayerItem(username, isSelf) {
-      const list = document.getElementById('playerList');
-      const item = document.createElement('div');
-      item.className = `player-item ${isSelf ? 'self' : ''}`;
-      item.innerHTML = `
-        <div>${username}</div>
-        <div class="player-role">未发牌</div>
-      `;
-      item.id = `player-${username}`;
-      list.appendChild(item);
-    }
-
-    // 移除玩家
-    function removePlayerItem(username) {
-      const item = document.getElementById(`player-${username}`);
-      if (item) item.remove();
-    }
-
-    // 检查开始游戏按钮状态（≥7人且房主选择≥6个角色）
-    function checkStartGameBtn(playerCount) {
-      const btn = document.getElementById('startGameBtn');
-      if (playerCount < 7) {
-        btn.disabled = true;
-        btn.textContent = `等待玩家加入（需≥7人，当前${playerCount}人）`;
-      } else {
-        if (isHost) {
-          const checkedRoles = document.querySelectorAll('.role-item input:checked').length;
-          if (checkedRoles < 6) {
-            btn.disabled = true;
-            btn.textContent = '请至少选择6个角色';
-          } else {
-            btn.disabled = false;
-            btn.textContent = '开始游戏（发牌动画）';
-            btn.onclick = startGame;
-          }
-        } else {
-          btn.disabled = false;
-          btn.textContent = '等待房主开始游戏';
-        }
+      if (!username || username.length < 2 || username.length > 8) {
+        errorMsg.textContent = '用户名必须是2-8个字符！';
+        return;
       }
-    }
-
-    // 发送聊天消息（夜间限制10字）
-    function sendChat() {
-      const content = document.getElementById('chatInput').value.trim();
-      if (!content) return;
-
-      // 夜间文字限制
-      if (isNight && content.length > 10) {
-        alert('夜间消息不能超过10字！');
+      if (!key || key.length < 6) {
+        errorMsg.textContent = '密钥必须至少6个字符！';
         return;
       }
 
-      ws.send(JSON.stringify({
-        type: 'chatMessage',
-        content,
-        username
-      }));
-      document.getElementById('chatInput').value = '';
+      // 跳转房间页（携带类型、房间号、用户名、密钥）
+      window.location.href = `match.html?roomId=${roomId}&username=${username}&key=${key}&isHost=${type === 'create'}`;
     }
 
-    // 语音录制（白天限制2秒/3条）
-    function toggleVoiceRecord() {
-      if (isNight) {
-        alert('夜间不支持语音聊天！');
-        return;
-      }
-      if (voiceRemain <= 0) {
-        alert('白天语音条数已用完！');
+    // 管理员操作
+    function adminOperate() {
+      const adminKey = document.getElementById('admin-key').value;
+      const operateType = document.getElementById('operate-type').value;
+      const adminMsg = document.getElementById('admin-msg');
+
+      if (adminKey !== 'admin_default_key') {
+        adminMsg.textContent = '管理员密钥无效！';
+        adminMsg.style.color = '#dc3545';
         return;
       }
 
-      const btn = document.getElementById('voiceBtn');
-      if (!mediaRecorder) {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-          .then(stream => {
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-            mediaRecorder.start();
-            btn.textContent = '松开停止（≤2秒）';
-            btn.style.background = '#dc3545';
-
-            // 限制录制时长2秒
-            setTimeout(() => {
-              if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                mediaRecorder = null;
-                btn.textContent = '按住说话';
-                btn.style.background = '#17a2b8';
-              }
-            }, 2000);
-          })
-          .catch(err => {
-            alert('录音权限被拒绝！');
-          });
-      } else {
-        mediaRecorder.stop();
-        mediaRecorder.stream.getTracks().forEach(track => track.stop());
-        mediaRecorder.onstop = () => {
-          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-          const reader = new FileReader();
-          reader.readAsDataURL(audioBlob);
-          reader.onloadend = () => {
-            const base64 = reader.result;
-            ws.send(JSON.stringify({
-              type: 'voiceMessage',
-              content: base64,
-              username
-            }));
-            voiceRemain--;
-            document.getElementById('voiceRemain').textContent = voiceRemain;
-          };
-          mediaRecorder = null;
-          btn.textContent = '按住说话';
-          btn.style.background = '#17a2b8';
-        };
+      switch(operateType) {
+        case 'resetRoom':
+          adminMsg.textContent = '房间重置成功！';
+          break;
+        case 'kickPlayer':
+          adminMsg.textContent = '请在房间内选择玩家踢出！';
+          break;
+        case 'closeRoom':
+          adminMsg.textContent = '房间关闭成功！';
+          break;
       }
+      adminMsg.style.color = '#28a745';
     }
-
-    // 添加聊天消息
-    function addChatMessage(content, type) {
-      const messagesDiv = document.getElementById('chatMessages');
-      const msgDiv = document.createElement('div');
-      msgDiv.className = `message ${type === 'my' ? 'my-message' : type === 'other' ? 'other-message' : 'system-message'}`;
-      msgDiv.textContent = content;
-      messagesDiv.appendChild(msgDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    // 添加语音消息
-    function addVoiceMessage(sender, time, voiceId) {
-      const messagesDiv = document.getElementById('chatMessages');
-      const msgDiv = document.createElement('div');
-      msgDiv.className = 'voice-message';
-      msgDiv.innerHTML = `
-        <span>${sender}（${time}）的语音消息：</span>
-        <button class="chat-btn voice-btn" style="padding:4px 8px; font-size:12px;" onclick="playVoice('${voiceId}')">播放</button>
-      `;
-      messagesDiv.appendChild(msgDiv);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    // 播放语音
-    function playVoice(voiceId) {
-      const audioPlayer = document.getElementById('audioPlayer');
-      audioPlayer.src = window.voiceMessages[voiceId];
-      audioPlayer.style.display = 'block';
-      audioPlayer.play();
-    }
-
-    // 开始游戏（房主）
-    function startGame() {
-      const checkedRoles = document.querySelectorAll('.role-item input:checked');
-      const selectedRoles = Array.from(checkedRoles).map(cb => cb.nextSibling.textContent.trim());
-      
-      ws.send(JSON.stringify({
-        type: 'startGame',
-        roomId,
-        selectedRoles
-      }));
-
-      // 发牌动画提示
-      addChatMessage('【系统通知】正在发牌...', 'system');
-    }
-
-    // 离开房间
-    function leaveRoom() {
-      ws.close();
-      window.location.href = 'index.html';
-    }
-
-    // 初始化自己的玩家项
-    addPlayerItem(username, true);
   </script>
 </body>
 </html>
