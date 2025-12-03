@@ -1,0 +1,16 @@
+{
+  "name": "fxwerewolf",
+  "version": "1.0.0",
+  "description": "狼人杀联机游戏",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": "18.x" // 明确Node版本，避免兼容问题
+  }
+}
