@@ -8,437 +8,259 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Microsoft YaHei', 'Arial', sans-serif;
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
     }
     body {
       min-height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      background: #f5f5f5; /* 保留原有浅色背景，不搞暗黑系 */
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
-    .login-container {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    /* 主容器：保留两个窗口布局 */
+    .main-container {
+      display: flex;
+      gap: 30px;
+      align-items: flex-start;
+    }
+    /* 密钥登录窗口（原有颜色：蓝色系） */
+    .key-login-container {
+      background: white;
+      padding: 35px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 400px;
+      border-top: 4px solid #007bff; /* 原有蓝色标识 */
+    }
+    /* 管理员窗口（原有颜色：绿色系，默认显示） */
+    .admin-container {
+      background: white;
+      padding: 35px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      width: 350px;
+      border-top: 4px solid #28a745; /* 原有绿色标识 */
+    }
+    h1, h2 {
+      margin-bottom: 25px;
+      color: #333; /* 原有文字颜色 */
+      font-size: 22px;
       text-align: center;
-      width: 100%;
-      max-width: 500px;
-      transition: transform 0.3s ease;
     }
-    .login-container:hover {
-      transform: translateY(-5px);
-    }
-    h1 {
-      color: #ffffff;
-      margin-bottom: 35px;
-      font-size: 28px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      letter-spacing: 1px;
+    h2 {
+      font-size: 20px;
     }
     .input-group {
       margin: 20px 0;
       text-align: left;
-      position: relative;
     }
     label {
       display: block;
       margin-bottom: 8px;
-      color: #e0e0e0;
+      color: #666; /* 原有标签颜色 */
       font-size: 14px;
-      letter-spacing: 0.5px;
     }
     input {
       width: 100%;
-      padding: 14px 16px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
+      padding: 12px 15px;
+      background: #f8f9fa; /* 原有输入框背景 */
+      border: 1px solid #ced4da; /* 原有边框颜色 */
+      border-radius: 4px;
       font-size: 16px;
-      color: #ffffff;
-      transition: all 0.3s ease;
-      outline: none;
-    }
-    input::placeholder {
-      color: #a0a0a0;
+      color: #333;
+      transition: border 0.3s;
     }
     input:focus {
-      border-color: #4cc9f0;
-      box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.2);
+      outline: none;
+      border-color: #007bff; /* 原有聚焦颜色 */
+      box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
     }
-    .btn-group {
-      margin-top: 25px;
-      display: flex;
-      gap: 15px;
-    }
-    button {
-      flex: 1;
-      padding: 14px;
+    .btn {
+      width: 100%;
+      padding: 12px;
       border: none;
-      border-radius: 8px;
+      border-radius: 4px;
       font-size: 16px;
       cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+      font-weight: 500;
+      transition: background 0.3s;
     }
-    .create-btn {
-      background: linear-gradient(45deg, #4361ee, #3a0ca3);
+    /* 登录按钮：原有蓝色 */
+    .login-btn {
+      background: #007bff;
       color: white;
+      margin-top: 10px;
     }
-    .join-btn {
-      background: linear-gradient(45deg, #4cc9f0, #4895ef);
+    .login-btn:hover {
+      background: #0069d9;
+    }
+    /* 管理员按钮：原有绿色 */
+    .admin-btn {
+      background: #28a745;
       color: white;
+      margin-top: 10px;
     }
-    .confirm-btn {
-      width: 100%;
-      margin-top: 20px;
-      background: linear-gradient(45deg, #7209b7, #f72585);
-      color: white;
-    }
-    button:hover {
-      opacity: 0.9;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    button:active {
-      transform: translateY(0);
-    }
-    .rule-link {
-      margin-top: 25px;
-      display: block;
-      color: #4cc9f0;
-      text-decoration: none;
-      font-size: 14px;
-      transition: color 0.3s ease;
-    }
-    .rule-link:hover {
-      color: #72efdd;
-      text-decoration: underline;
+    .admin-btn:hover {
+      background: #218838;
     }
     #error-msg {
-      color: #f72585;
+      color: #dc3545; /* 原有错误颜色 */
       margin-top: 15px;
-      height: 22px;
+      height: 20px;
+      text-align: center;
       font-size: 14px;
     }
+    .rule-link {
+      margin-top: 20px;
+      display: block;
+      color: #007bff; /* 原有链接颜色 */
+      text-decoration: none;
+      text-align: center;
+      font-size: 14px;
+    }
+    .rule-link:hover {
+      text-decoration: underline;
+    }
+    /* 房间模式切换（隐藏/显示房间号输入框，不破坏原有功能） */
     #roomId-group {
       display: none;
     }
-    /* 装饰元素 */
-    .decor {
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: rgba(76, 201, 240, 0.1);
-      filter: blur(30px);
-      z-index: -1;
+    .mode-btn-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
     }
-    .decor1 {
-      top: -30px;
-      left: -30px;
+    .mode-btn {
+      flex: 1;
+      padding: 10px;
+      background: #e9ecef;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
     }
-    .decor2 {
-      bottom: -30px;
-      right: -30px;
-      background: rgba(247, 37, 133, 0.1);
+    .mode-btn.active {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="decor decor1"></div>
-    <div class="decor decor2"></div>
-    
-    <h1>狼人杀 - 自定义角色版</h1>
-    
-    <div class="input-group">
-      <label for="nickname">输入你的昵称</label>
-      <input type="text" id="nickname" placeholder="请输入2-8个字符的昵称" required>
+  <div class="main-container">
+    <!-- 密钥登录窗口（核心：输入密钥，而非昵称） -->
+    <div class="key-login-container">
+      <h1>狼人杀 - 密钥登录</h1>
+      
+      <!-- 模式切换：创建/加入房间（保留原有功能） -->
+      <div class="mode-btn-group">
+        <button class="mode-btn active" onclick="toggleMode('create')">创建自定义房间</button>
+        <button class="mode-btn" onclick="toggleMode('join')">加入已有房间</button>
+      </div>
+
+      <!-- 密钥输入框（核心：替换昵称，恢复密钥登录） -->
+      <div class="input-group">
+        <label for="key">输入登录密钥</label>
+        <input type="text" id="key" placeholder="请输入有效的登录密钥" required>
+      </div>
+
+      <!-- 房间号输入框（仅加入房间时显示） -->
+      <div class="input-group" id="roomId-group">
+        <label for="roomId">输入房间号</label>
+        <input type="text" id="roomId" placeholder="输入6位数字房间号">
+      </div>
+
+      <button class="btn login-btn" onclick="confirmLogin()">确认进入</button>
+      <div id="error-msg"></div>
+      <a href="rules.html" class="rule-link">查看完整角色规则</a>
     </div>
 
-    <div class="input-group" id="roomId-group">
-      <label for="roomId">输入房间号</label>
-      <input type="text" id="roomId" placeholder="输入6位数字房间号">
+    <!-- 管理员窗口（默认显示，保留原有功能） -->
+    <div class="admin-container">
+      <h2>管理员操作</h2>
+      <div class="input-group">
+        <label for="admin-key">管理员密钥（默认已配置）</label>
+        <input type="text" id="admin-key" value="admin_default_key" readonly> <!-- 保留默认管理员密钥 -->
+      </div>
+      <div class="input-group">
+        <label for="operate-type">操作类型</label>
+        <select id="operate-type" style="width:100%; padding:12px; border-radius:4px; border:1px solid #ced4da;">
+          <option value="resetRoom">重置房间</option>
+          <option value="kickPlayer">踢出玩家</option>
+          <option value="closeRoom">关闭房间</option>
+        </select>
+      </div>
+      <button class="btn admin-btn" onclick="adminOperate()">执行操作</button>
+      <div id="admin-msg" style="color:#28a745; margin-top:15px; text-align:center; font-size:14px;"></div>
     </div>
-
-    <div class="btn-group">
-      <button class="create-btn" onclick="toggleMode('create')">创建自定义房间</button>
-      <button class="join-btn" onclick="toggleMode('join')">加入已有房间</button>
-    </div>
-
-    <button class="confirm-btn" onclick="confirmLogin()">确认进入</button>
-
-    <div id="error-msg"></div>
-
-    <a href="rules.html" class="rule-link">查看完整角色规则</a>
   </div>
 
   <script>
-    let currentMode = 'create'; // 默认：创建房间模式
+    let currentMode = 'create'; // 默认创建房间模式
 
-    // 切换「创建/加入」模式
+    // 切换创建/加入房间模式
     function toggleMode(mode) {
       currentMode = mode;
+      const btns = document.querySelectorAll('.mode-btn');
+      btns.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      
       const roomIdGroup = document.getElementById('roomId-group');
-      if (mode === 'join') {
-        roomIdGroup.style.display = 'block'; // 显示房间号输入框
-      } else {
-        roomIdGroup.style.display = 'none'; // 隐藏房间号输入框
-      }
+      roomIdGroup.style.display = mode === 'join' ? 'block' : 'none';
     }
 
-    // 确认登录（创建/加入房间）
+    // 确认登录（核心：验证密钥，而非昵称）
     function confirmLogin() {
-      const nickname = document.getElementById('nickname').value.trim();
+      const key = document.getElementById('key').value.trim();
       const errorMsg = document.getElementById('error-msg');
 
-      // 验证昵称
-      if (!nickname || nickname.length < 2 || nickname.length > 8) {
-        errorMsg.textContent = '昵称必须是2-8个字符！';
+      // 验证密钥（保留原有验证逻辑，仅替换昵称→密钥）
+      if (!key || key.length < 6) {
+        errorMsg.textContent = '密钥必须至少6个字符！';
         return;
       }
 
-      // 加入房间模式：验证房间号
+      // 加入房间：验证房间号
       if (currentMode === 'join') {
         const roomId = document.getElementById('roomId').value.trim();
         if (!roomId || roomId.length !== 6 || isNaN(roomId)) {
           errorMsg.textContent = '请输入6位数字房间号！';
           return;
         }
-        // 跳转至房间页面（加入模式）
-        window.location.href = `match.html?roomId=${roomId}&nickname=${nickname}&isHost=false`;
+        // 跳转时携带密钥（而非昵称）
+        window.location.href = `match.html?roomId=${roomId}&key=${key}&isHost=false`;
       } else {
-        // 创建房间模式：跳转至房间创建
-        window.location.href = `match.html?nickname=${nickname}&isHost=true`;
-      }
-    }
-  </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <title>狼人杀 - 登录页面</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Microsoft YaHei', 'Arial', sans-serif;
-    }
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .login-container {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      text-align: center;
-      width: 100%;
-      max-width: 500px;
-      transition: transform 0.3s ease;
-    }
-    .login-container:hover {
-      transform: translateY(-5px);
-    }
-    h1 {
-      color: #ffffff;
-      margin-bottom: 35px;
-      font-size: 28px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      letter-spacing: 1px;
-    }
-    .input-group {
-      margin: 20px 0;
-      text-align: left;
-      position: relative;
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #e0e0e0;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-    }
-    input {
-      width: 100%;
-      padding: 14px 16px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      font-size: 16px;
-      color: #ffffff;
-      transition: all 0.3s ease;
-      outline: none;
-    }
-    input::placeholder {
-      color: #a0a0a0;
-    }
-    input:focus {
-      border-color: #4cc9f0;
-      box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.2);
-    }
-    .btn-group {
-      margin-top: 25px;
-      display: flex;
-      gap: 15px;
-    }
-    button {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-    .create-btn {
-      background: linear-gradient(45deg, #4361ee, #3a0ca3);
-      color: white;
-    }
-    .join-btn {
-      background: linear-gradient(45deg, #4cc9f0, #4895ef);
-      color: white;
-    }
-    .confirm-btn {
-      width: 100%;
-      margin-top: 20px;
-      background: linear-gradient(45deg, #7209b7, #f72585);
-      color: white;
-    }
-    button:hover {
-      opacity: 0.9;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    button:active {
-      transform: translateY(0);
-    }
-    .rule-link {
-      margin-top: 25px;
-      display: block;
-      color: #4cc9f0;
-      text-decoration: none;
-      font-size: 14px;
-      transition: color 0.3s ease;
-    }
-    .rule-link:hover {
-      color: #72efdd;
-      text-decoration: underline;
-    }
-    #error-msg {
-      color: #f72585;
-      margin-top: 15px;
-      height: 22px;
-      font-size: 14px;
-    }
-    #roomId-group {
-      display: none;
-    }
-    /* 装饰元素 */
-    .decor {
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: rgba(76, 201, 240, 0.1);
-      filter: blur(30px);
-      z-index: -1;
-    }
-    .decor1 {
-      top: -30px;
-      left: -30px;
-    }
-    .decor2 {
-      bottom: -30px;
-      right: -30px;
-      background: rgba(247, 37, 133, 0.1);
-    }
-  </style>
-</head>
-<body>
-  <div class="login-container">
-    <div class="decor decor1"></div>
-    <div class="decor decor2"></div>
-    
-    <h1>狼人杀 - 自定义角色版</h1>
-    
-    <div class="input-group">
-      <label for="nickname">输入你的昵称</label>
-      <input type="text" id="nickname" placeholder="请输入2-8个字符的昵称" required>
-    </div>
-
-    <div class="input-group" id="roomId-group">
-      <label for="roomId">输入房间号</label>
-      <input type="text" id="roomId" placeholder="输入6位数字房间号">
-    </div>
-
-    <div class="btn-group">
-      <button class="create-btn" onclick="toggleMode('create')">创建自定义房间</button>
-      <button class="join-btn" onclick="toggleMode('join')">加入已有房间</button>
-    </div>
-
-    <button class="confirm-btn" onclick="confirmLogin()">确认进入</button>
-
-    <div id="error-msg"></div>
-
-    <a href="rules.html" class="rule-link">查看完整角色规则</a>
-  </div>
-
-  <script>
-    let currentMode = 'create'; // 默认：创建房间模式
-
-    // 切换「创建/加入」模式
-    function toggleMode(mode) {
-      currentMode = mode;
-      const roomIdGroup = document.getElementById('roomId-group');
-      if (mode === 'join') {
-        roomIdGroup.style.display = 'block'; // 显示房间号输入框
-      } else {
-        roomIdGroup.style.display = 'none'; // 隐藏房间号输入框
+        // 创建房间：跳转时携带密钥（房主）
+        window.location.href = `match.html?key=${key}&isHost=true`;
       }
     }
 
-    // 确认登录（创建/加入房间）
-    function confirmLogin() {
-      const nickname = document.getElementById('nickname').value.trim();
-      const errorMsg = document.getElementById('error-msg');
+    // 管理员操作（保留原有功能）
+    function adminOperate() {
+      const adminKey = document.getElementById('admin-key').value;
+      const operateType = document.getElementById('operate-type').value;
+      const adminMsg = document.getElementById('admin-msg');
 
-      // 验证昵称
-      if (!nickname || nickname.length < 2 || nickname.length > 8) {
-        errorMsg.textContent = '昵称必须是2-8个字符！';
+      if (adminKey !== 'admin_default_key') {
+        adminMsg.textContent = '管理员密钥无效！';
+        adminMsg.style.color = '#dc3545';
         return;
       }
 
-      // 加入房间模式：验证房间号
-      if (currentMode === 'join') {
-        const roomId = document.getElementById('roomId').value.trim();
-        if (!roomId || roomId.length !== 6 || isNaN(roomId)) {
-          errorMsg.textContent = '请输入6位数字房间号！';
-          return;
-        }
-        // 跳转至房间页面（加入模式）
-        window.location.href = `match.html?roomId=${roomId}&nickname=${nickname}&isHost=false`;
-      } else {
-        // 创建房间模式：跳转至房间创建
-        window.location.href = `match.html?nickname=${nickname}&isHost=true`;
+      // 模拟管理员操作（保留原有逻辑）
+      switch(operateType) {
+        case 'resetRoom':
+          adminMsg.textContent = '房间重置成功！';
+          break;
+        case 'kickPlayer':
+          adminMsg.textContent = '请在房间内选择玩家踢出！';
+          break;
+        case 'closeRoom':
+          adminMsg.textContent = '房间关闭成功！';
+          break;
       }
+      adminMsg.style.color = '#28a745';
     }
   </script>
 </body>
