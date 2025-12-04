@@ -592,8 +592,7 @@
                 return;
             }
 
-            // 收集角色配置
-            const roleConfig = {
+const roleConfig = {
                 normalWolf: parseInt(document.getElementById('normalWolfCount').value),
                 whiteWolf: parseInt(document.getElementById('whiteWolfCount').value),
                 seer: parseInt(document.getElementById('seerCount').value),
@@ -603,7 +602,6 @@
                 civilian: parseInt(document.getElementById('civilianCount').value),
                 idiot: parseInt(document.getElementById('idiotCount').value)
             };
-
             // 保存角色配置到本地
             roomState.roleConfig = roleConfig;
 
