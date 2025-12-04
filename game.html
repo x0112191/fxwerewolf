@@ -1,15 +1,16 @@
-<!DOCTYPE html>
+
+              <!DOCTYPE html>
 <html lang="zh-CN" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>狼人杀 - 游戏房间</title>
+    <title>狼人杀 - 游戏界面</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.bootcdn.net/ajax/libs/daisyui/4.12.10/full.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         .gradient-bg {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         .glass-effect {
             backdrop-filter: blur(10px);
@@ -24,549 +25,635 @@
             min-height: 44px;
             min-width: 44px;
         }
-        .player-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .game-log {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .perspective-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            z-index: 1000;
+            background: rgba(102, 126, 234, 0.95);
             border-radius: 12px;
-            padding: 12px;
-            transition: all 0.3s ease;
-        }
-        .player-card:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-        }
-        .player-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #3498db, #2980b9);
-        }
-        .player-card.alive {
-            border-color: rgba(46, 204, 113, 0.5);
-        }
-        .player-card.dead {
-            border-color: rgba(231, 76, 60, 0.5);
-            opacity: 0.7;
-        }
-        .role-card {
-            background: linear-gradient(45deg, #1a2a3a, #2c3e50);
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
         }
     </style>
 </head>
-<body class="gradient-bg min-h-screen text-white">
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <!-- 顶部导航 -->
-        <header class="flex justify-between items-center mb-8">
-            <div class="flex items-center">
-                <i class="fas fa-wolf-pack-battalion text-2xl mr-3 text-red-400"></i>
-                <h1 class="text-2xl font-bold">狼人杀游戏</h1>
-                <span class="ml-4 bg-yellow-500/20 text-yellow-300 px-3 py-1 rounded-full text-sm">
-                    房间号：<span id="gameRoomId"></span>
-                </span>
-            </div>
-            <div class="flex space-x-4">
-                <button onclick="showRules()" class="btn btn-primary btn-mobile">
-                    <i class="fas fa-book mr-2"></i>规则
-                </button>
-                <button onclick="exitGame()" class="btn btn-error btn-mobile">
-                    <i class="fas fa-sign-out-alt mr-2"></i>退出
-                </button>
-            </div>
-        </header>
+<body class="gradient-bg min-h-screen p-4">
+    <!-- 游戏主面板 -->
+    <div class="w-full max-w-4xl mx-auto">
+        <div class="text-center mb-4">
+            <button onclick="leaveGame()" class="btn btn-ghost btn-sm text-white mb-2">
+                <i class="fas fa-sign-out-alt mr-2"></i>退出游戏
+            </button>
+            <h1 class="text-3xl font-bold text-white">狼人杀游戏</h1>
+            <p class="text-white/80" id="gamePhase">游戏阶段：夜晚</p>
+            <p class="text-white/80" id="dayInfo">第1天</p>
+        </div>
 
-        <!-- 游戏状态 -->
-        <div class="glass-effect rounded-2xl p-6 mb-8">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold" id="gameStatus">游戏进行中 - 夜晚阶段</h2>
-                <div class="text-sm text-gray-300">
-                    存活玩家：<span id="alivePlayerCount">0</span>/<span id="totalPlayerCount">0</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <!-- 玩家列表 -->
+            <div class="glass-effect rounded-2xl p-4 shadow-2xl">
+                <h3 class="text-white font-bold mb-2 flex items-center">
+                    <i class="fas fa-users mr-2"></i>玩家列表
+                </h3>
+                <div id="playerList" class="bg-white/5 rounded-lg p-2 max-h-80 overflow-y-auto">
+                    <!-- 玩家列表动态生成 -->
                 </div>
             </div>
-            
-            <!-- 玩家列表 -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3" id="playerList">
-                <!-- 玩家卡片会动态添加到这里 -->
+
+            <!-- 游戏日志 -->
+            <div class="glass-effect rounded-2xl p-4 shadow-2xl md:col-span-2">
+                <h3 class="text-white font-bold mb-2 flex items-center">
+                    <i class="fas fa-history mr-2"></i>游戏日志
+                </h3>
+                <div id="gameLog" class="bg-white/5 rounded-lg p-2 h-80 overflow-y-auto game-log">
+                    <div class="text-white/80">游戏开始！</div>
+                </div>
             </div>
         </div>
 
-        <!-- 游戏区域 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 左侧：游戏信息 -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- 游戏日志 -->
-                <div class="glass-effect rounded-2xl p-6 h-64 overflow-y-auto">
-                    <h3 class="text-lg font-bold mb-4 flex items-center">
-                        <i class="fas fa-history mr-2"></i>游戏日志
-                    </h3>
-                    <div id="gameLog" class="space-y-2 text-sm">
-                        <p class="text-gray-400">游戏开始，角色分配完成...</p>
-                    </div>
-                </div>
-
-                <!-- 发言区 -->
-                <div class="glass-effect rounded-2xl p-6">
-                    <h3 class="text-lg font-bold mb-4 flex items-center">
-                        <i class="fas fa-comments mr-2"></i>发言区
-                    </h3>
-                    <div class="mb-4 h-40 overflow-y-auto bg-black/30 rounded-lg p-3" id="chatArea">
-                        <!-- 聊天消息会动态添加到这里 -->
-                    </div>
-                    <div class="flex">
-                        <input type="text" id="messageInput" placeholder="输入消息..." 
-                            class="flex-1 mobile-input bg-white/10 border border-white/20 rounded-l-lg px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <button onclick="sendMessage()" class="btn btn-primary rounded-l-none btn-mobile">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
-                </div>
+        <!-- 聊天面板 -->
+        <div class="glass-effect rounded-2xl p-4 shadow-2xl mb-4">
+            <h3 class="text-white font-bold mb-2 flex items-center">
+                <i class="fas fa-comments mr-2"></i>聊天区域
+            </h3>
+            <div id="chatMessages" class="bg-white/5 rounded-lg p-2 h-40 overflow-y-auto mb-2">
+                <!-- 聊天消息动态生成 -->
             </div>
-
-            <!-- 右侧：操作区 -->
-            <div class="space-y-6">
-                <!-- 角色信息 -->
-                <div class="glass-effect rounded-2xl p-6">
-                    <h3 class="text-lg font-bold mb-4 flex items-center">
-                        <i class="fas fa-user-secret mr-2"></i>你的角色
-                    </h3>
-                    <div id="roleInfo" class="role-card text-center py-6">
-                        <i class="fas fa-user-secret text-4xl mb-3" id="roleIcon"></i>
-                        <h4 class="text-xl font-bold mb-2" id="roleName">加载中...</h4>
-                        <p class="text-sm text-gray-300" id="roleDescription">加载角色描述...</p>
-                    </div>
-                </div>
-
-                <!-- 操作按钮 -->
-                <div class="glass-effect rounded-2xl p-6">
-                    <h3 class="text-lg font-bold mb-4 flex items-center">
-                        <i class="fas fa-cog mr-2"></i>游戏操作
-                    </h3>
-                    <div class="grid grid-cols-2 gap-3" id="actionButtons">
-                        <button id="voteButton" onclick="showVotePanel()" class="btn btn-primary btn-mobile">
-                            <i class="fas fa-vote-yea mr-2"></i>投票
-                        </button>
-                        <button id="skillButton" onclick="useSkill()" class="btn btn-info btn-mobile">
-                            <i class="fas fa-magic mr-2"></i>技能
-                        </button>
-                        <button id="skipButton" onclick="skipTurn()" class="btn btn-warning btn-mobile">
-                            <i class="fas fa-forward mr-2"></i>跳过
-                        </button>
-                    </div>
-                </div>
+            <div class="flex gap-2">
+                <input type="text" id="messageInput" placeholder="输入聊天消息（输入666888可透视）" class="input input-bordered mobile-input flex-1">
+                <button onclick="sendMessage()" class="btn btn-primary btn-mobile">发送</button>
             </div>
+        </div>
+
+        <!-- 技能操作面板 -->
+        <div id="skillPanel" class="glass-effect rounded-2xl p-4 shadow-2xl hidden">
+            <h3 class="text-white font-bold mb-2 flex items-center">
+                <i class="fas fa-magic mr-2"></i>技能操作
+            </h3>
+            <div id="skillContent">
+                <!-- 技能内容动态生成 -->
+            </div>
+        </div>
+
+        <!-- 投票面板 -->
+        <div id="votePanel" class="glass-effect rounded-2xl p-4 shadow-2xl hidden">
+            <h3 class="text-white font-bold mb-2 flex items-center">
+                <i class="fas fa-vote-yea mr-2"></i>投票放逐
+            </h3>
+            <div id="voteTargets" class="bg-white/5 rounded-lg p-2 mb-4">
+                <!-- 投票目标动态生成 -->
+            </div>
+            <button onclick="submitVote()" class="btn btn-warning w-full btn-mobile">
+                <i class="fas fa-check mr-2"></i>提交投票
+            </button>
         </div>
     </div>
 
-    <!-- 投票面板 -->
-    <dialog id="voteModal" class="glass-effect rounded-2xl p-6 max-w-md text-white border-none">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold">投票淘汰</h3>
-            <button onclick="closeVoteModal()" class="text-gray-300 hover:text-white">
-                <i class="fas fa-times text-xl"></i>
+    <!-- 透视面板 -->
+    <div id="perspectivePanel" class="perspective-panel hidden">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-white font-bold">所有玩家身份</h3>
+            <button onclick="closePerspective()" class="btn btn-ghost btn-sm text-white">
+                <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="space-y-4 max-h-60 overflow-y-auto" id="votePlayerList">
-            <!-- 投票玩家列表 -->
+        <div id="perspectiveContent">
+            <!-- 透视内容动态生成 -->
         </div>
-        <div class="modal-action mt-4">
-            <button onclick="closeVoteModal()" class="btn btn-outline">取消</button>
-        </div>
-    </dialog>
+    </div>
 
-    <!-- 规则弹窗 -->
-    <dialog id="rulesModal" class="glass-effect rounded-2xl p-6 max-w-2xl text-white border-none">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold">游戏规则</h3>
-            <button onclick="closeRules()" class="text-gray-300 hover:text-white">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="space-y-6 max-h-[70vh] overflow-y-auto">
-            <div>
-                <h4 class="font-bold text-lg mb-3">游戏流程</h4>
-                <ol class="text-sm text-gray-300 space-y-1">
-                    <li>1. 夜晚阶段：狼人杀人，神职使用技能，中立角色行动</li>
-                    <li>2. 白天阶段：讨论发言，投票淘汰，警长竞选</li>
-                    <li>3. 胜负判定：某一阵营达成胜利条件即游戏结束</li>
-                </ol>
-            </div>
-            <div>
-                <h4 class="font-bold text-lg mb-3">角色技能</h4>
-                <div class="space-y-3 text-sm text-gray-300">
-                    <div>
-                        <strong class="text-red-400">普通狼人</strong>：夜晚可以共同击杀一名玩家
-                    </div>
-                    <div>
-                        <strong class="text-red-400">白狼王</strong>：夜晚可以击杀一名玩家，白天可以自爆带走一名玩家
-                    </div>
-                    <div>
-                        <strong class="text-blue-400">预言家</strong>：夜晚可以查验一名玩家的阵营
-                    </div>
-                    <div>
-                        <strong class="text-blue-400">女巫</strong>：拥有一瓶解药和一瓶毒药，夜晚可以救人或毒人
-                    </div>
-                    <div>
-                        <strong class="text-blue-400">猎人</strong>：被淘汰时可以开枪带走一名玩家
-                    </div>
-                    <div>
-                        <strong class="text-blue-400">守卫</strong>：夜晚可以守护一名玩家，防止被狼人击杀
-                    </div>
-                    <div>
-                        <strong class="text-green-400">普通平民</strong>：无特殊技能，白天参与投票
-                    </div>
-                    <div>
-                        <strong class="text-purple-400">白痴</strong>：被投票淘汰时不会出局，失去投票权但可以发言
-                    </div>
-                </div>
-            </div>
-            <div>
-                <h4 class="font-bold text-lg mb-3">胜利条件</h4>
-                <ul class="text-sm text-gray-300 space-y-1">
-                    <li>• 狼人阵营：击杀所有好人阵营玩家</li>
-                    <li>• 好人阵营：放逐所有狼人阵营玩家</li>
-                    <li>• 中立阵营：完成各自独特的胜利条件</li>
-                </ul>
-            </div>
-        </div>
-    </dialog>
+    <!-- 提示框 -->
+    <div id="toast" class="toast">操作提示</div>
 
     <script>
-        // 全局状态
-        const currentUser = JSON.parse(localStorage.getItem('current_user'));
-        const playerRole = localStorage.getItem('playerRole');
-        const gameState = JSON.parse(localStorage.getItem('gameState'));
-        const currentRoomId = localStorage.getItem('currentRoomId');
-        let ws = null;
-        let players = [];
+        // URL参数解析
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentRoomId = urlParams.get('roomId');
+        const currentPlayerId = urlParams.get('playerId');
+        let currentPlayerName = '未知玩家';
+        let myRole = '';
+        let myFaction = '';
+        let selectedVoteTarget = '';
+        let hasAntidote = true; // 女巫解药状态
+        let hasPoison = true;   // 女巫毒药状态
 
-
+        // WebSocket 连接
         const RENDER_WS_URL = 'wss://fxwerewolf.vercel.app';
+        let ws;
 
-        // 检查游戏状态
-        if (!currentUser || !playerRole || !gameState || !currentRoomId) {
-            alert('游戏状态异常，请重新进入房间！');
-            window.location.href = 'match.html';
-        }
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initWebSocket();
+            
+            // 移动端输入框聚焦修复
+            document.getElementById('messageInput').addEventListener('focus', () => {
+                window.scrollTo(0, 0);
+            });
+        });
 
-        // 页面加载完成后初始化
-        window.onload = function() {
-            // 显示房间号
-            document.getElementById('gameRoomId').textContent = currentRoomId;
-            // 显示角色信息
-            showRoleInfo();
-            // 连接WebSocket服务器
-            connectWebSocket();
-            // 初始化游戏状态
-            updateGameStatus();
-        };
+        // 初始化WebSocket
+        function initWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) return;
 
-        // 连接WebSocket服务器（Render）
-        function connectWebSocket() {
-            // 关闭已有连接
-            if (ws) {
-                ws.close();
-            }
-
-            // 创建新连接
             ws = new WebSocket(RENDER_WS_URL);
 
-            // 连接成功
-            ws.onopen = function() {
-                console.log('WebSocket连接成功（游戏页面）');
-                addGameLog('系统', '已连接到游戏服务器');
+            ws.onopen = () => {
+                console.log('WebSocket 连接成功');
+                // 发送加入游戏确认
+                sendWsMessage({
+                    type: 'joinGame',
+                    roomId: currentRoomId,
+                    playerId: currentPlayerId
+                });
             };
 
-            // 接收消息
-            ws.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                console.log('收到游戏消息:', data);
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                console.log('收到消息：', message.type);
 
-                switch(data.type) {
-                    case 'playerListUpdate':
-                        players = data.players;
-                        updatePlayerList();
-                        updateGameStatus();
+                switch (message.type) {
+                    // 游戏状态更新
+                    case 'gameState':
+                        updateGameState(message.data);
                         break;
 
-                    case 'gameAction':
-                        handleGameAction(data.action, data.playerId);
+                    // 自己的角色
+                    case 'myRole':
+                        myRole = message.role;
+                        myFaction = message.faction;
+                        currentPlayerName = message.playerName || currentPlayerName;
+                        addGameLog(`你是【${myRole}】，阵营：${getFactionName(myFaction)}`, 'white');
+                        showToast(`你的身份：${myRole}`, 'success');
+                        // 根据角色显示技能面板
+                        showSkillPanel();
                         break;
 
-                    case 'newChatMessage':
-                        addChatMessage(data.playerName, data.message);
-                        break;
-
-                    case 'phaseChange':
-                        gameState.phase = data.phase;
-                        updateGameStatus();
-                        addGameLog('系统', `游戏阶段切换为：${getPhaseName(data.phase)}`);
-                        break;
-
-                    case 'playerKilled':
-                        const killedPlayer = players.find(p => p.id === data.playerId);
-                        if (killedPlayer) {
-                            killedPlayer.isAlive = false;
-                            updatePlayerList();
-                            addGameLog('系统', `${killedPlayer.name} 被淘汰了`);
+                    // 夜晚行动结果
+                    case 'nightResult':
+                        addGameLog('=== 夜晚行动结束 ===', 'yellow-400');
+                        message.result.skillMessages.forEach(msg => {
+                            addGameLog(msg, 'white');
+                        });
+                        // 显示死亡玩家
+                        if (message.result.deadPlayers.length > 0) {
+                            addGameLog(`夜晚死亡玩家：${message.result.deadPlayers.map(getPlayerNameById).join(', ')}`, 'red-500');
+                        } else {
+                            addGameLog('夜晚无人死亡', 'green-500');
+                        }
+                        // 更新女巫药剂状态
+                        if (myRole === '女巫') {
+                            hasAntidote = message.result.hasAntidote !== undefined ? message.result.hasAntidote : hasAntidote;
+                            hasPoison = message.result.hasPoison !== undefined ? message.result.hasPoison : hasPoison;
                         }
                         break;
 
+                    // 投票结果
+                    case 'voteResult':
+                        addGameLog('=== 投票结果 ===', 'yellow-400');
+                        message.result.skillMessages.forEach(msg => {
+                            addGameLog(msg, 'white');
+                        });
+                        // 显示被放逐玩家
+                        if (message.result.votedPlayerId) {
+                            addGameLog(`被放逐玩家：${getPlayerNameById(message.result.votedPlayerId)}`, 'red-500');
+                        }
+                        // 游戏结束
+                        if (message.result.winner) {
+                            const winnerName = getFactionName(message.result.winner);
+                            addGameLog(`=== 游戏结束 === 获胜阵营：${winnerName}`, 'yellow-400');
+                            showToast(`游戏结束！${winnerName}获胜`, 'success');
+                            // 隐藏操作面板
+                            document.getElementById('skillPanel').classList.add('hidden');
+                            document.getElementById('votePanel').classList.add('hidden');
+                        }
+                        break;
+
+                    // 决斗结果
+                    case 'duelResult':
+                        addGameLog('=== 骑士决斗 ===', 'yellow-400');
+                        message.result.messages.forEach(msg => {
+                            addGameLog(msg, 'white');
+                        });
+                        // 显示死亡玩家
+                        if (message.result.deadPlayers.length > 0) {
+                            addGameLog(`决斗死亡玩家：${message.result.deadPlayers.map(getPlayerNameById).join(', ')}`, 'red-500');
+                        }
+                        break;
+
+                    // 聊天消息
+                    case 'chatMessage':
+                        addChatMessage(message.playerName, message.message);
+                        break;
+
+                    // 透视结果
+                    case 'perspectiveResult':
+                        document.getElementById('perspectiveContent').innerHTML = message.players.map(p => 
+                            `<div class="flex justify-between p-2 border-b border-white/20">
+                                <span class="text-white">${p.name}</span>
+                                <span class="font-bold text-white">${p.role}</span>
+                            </div>`
+                        ).join('');
+                        document.getElementById('perspectivePanel').classList.remove('hidden');
+                        break;
+
+                    // 游戏开始
+                    case 'gameStarted':
+                        addGameLog(message.message, 'green-500');
+                        break;
+
+                    // 心跳
+                    case 'heartbeat':
+                        ws.send(JSON.stringify({ type: 'heartbeat', timestamp: Date.now() }));
+                        break;
+
+                    // 错误
                     case 'error':
-                        alert(`游戏错误：${data.message}`);
+                        showToast(message.message, 'error');
                         break;
                 }
             };
 
-            // 连接关闭
-            ws.onclose = function() {
-                console.log('WebSocket连接关闭');
-                addGameLog('系统', '与服务器断开连接，正在尝试重连...', 'red-400');
-                // 自动重连
-                setTimeout(connectWebSocket, 3000);
+            ws.onclose = () => {
+                console.log('WebSocket 连接关闭');
+                showToast('与服务器断开连接，正在重连...', 'error');
+                // 重连
+                setTimeout(() => {
+                    initWebSocket();
+                }, 3000);
             };
 
-            // 连接错误
-            ws.onerror = function(error) {
-                console.error('游戏WebSocket错误:', error);
-                addGameLog('系统', '连接服务器失败，请刷新页面', 'red-400');
+            ws.onerror = (err) => {
+                console.error('WebSocket 错误：', err);
+                showToast('WebSocket 连接错误', 'error');
             };
-        }
-
-        // 显示角色信息
-        function showRoleInfo() {
-            const roleNameEl = document.getElementById('roleName');
-            const roleDescEl = document.getElementById('roleDescription');
-            const roleIconEl = document.getElementById('roleIcon');
-
-            roleNameEl.textContent = playerRole;
-
-            // 设置角色图标和描述
-            switch(playerRole) {
-                case '普通狼人':
-                    roleIconEl.className = 'fas fa-user-secret text-4xl mb-3 text-red-500';
-                    roleDescEl.textContent = '夜晚可以和其他狼人一起击杀一名玩家，白天隐藏身份误导他人';
-                    break;
-                case '白狼王':
-                    roleIconEl.className = 'fas fa-crown text-4xl mb-3 text-red-600';
-                    roleDescEl.textContent = '狼人阵营领袖，夜晚可以击杀玩家，白天可以自爆带走一名玩家';
-                    break;
-                case '预言家':
-                    roleIconEl.className = 'fas fa-eye text-4xl mb-3 text-blue-500';
-                    roleDescEl.textContent = '好人阵营神职，夜晚可以查验一名玩家的阵营身份';
-                    break;
-                case '女巫':
-                    roleIconEl.className = 'fas fa-potion text-4xl mb-3 text-green-500';
-                    roleDescEl.textContent = '好人阵营神职，拥有解药和毒药，夜晚可以救人或毒杀一名玩家';
-                    break;
-                case '猎人':
-                    roleIconEl.className = 'fas fa-crosshairs text-4xl mb-3 text-orange-500';
-                    roleDescEl.textContent = '好人阵营神职，被淘汰时可以开枪带走一名玩家';
-                    break;
-                case '守卫':
-                    roleIconEl.className = 'fas fa-shield-alt text-4xl mb-3 text-purple-500';
-                    roleDescEl.textContent = '好人阵营神职，夜晚可以守护一名玩家，防止被狼人击杀';
-                    break;
-                case '普通平民':
-                    roleIconEl.className = 'fas fa-user text-4xl mb-3 text-gray-300';
-                    roleDescEl.textContent = '好人阵营，无特殊技能，白天通过分析推理找出狼人';
-                    break;
-                case '白痴':
-                    roleIconEl.className = 'fas fa-question-circle text-4xl mb-3 text-yellow-500';
-                    roleDescEl.textContent = '中立阵营，被投票淘汰时不会出局，失去投票权但可以继续发言';
-                    break;
-                default:
-                    roleIconEl.className = 'fas fa-user-secret text-4xl mb-3';
-                    roleDescEl.textContent = '未知角色';
-            }
         }
 
         // 更新游戏状态
-        function updateGameStatus() {
-            const gameStatusEl = document.getElementById('gameStatus');
-            const aliveCountEl = document.getElementById('alivePlayerCount');
-            const totalCountEl = document.getElementById('totalPlayerCount');
-
-            // 更新游戏阶段文本
-            gameStatusEl.textContent = `游戏进行中 - ${getPhaseName(gameState.phase)}`;
-
-            // 更新玩家数量
-            totalCountEl.textContent = players.length;
-            const aliveCount = players.filter(p => p.isAlive !== false).length;
-            aliveCountEl.textContent = aliveCount;
+        function updateGameState(state) {
+            // 更新游戏阶段
+            document.getElementById('gamePhase').textContent = `游戏阶段：${getPhaseName(state.gamePhase)}`;
+            document.getElementById('dayInfo').textContent = `第${state.day}天`;
 
             // 更新玩家列表
-            updatePlayerList();
-
-            // 更新操作按钮状态
-            updateActionButtons();
-        }
-
-        // 获取阶段名称
-        function getPhaseName(phase) {
-            switch(phase) {
-                case 'waiting': return '等待阶段';
-                case 'night': return '夜晚阶段';
-                case 'day': return '白天阶段';
-                case 'voting': return '投票阶段';
-                case 'over': return '游戏结束';
-                default: return '未知阶段';
-            }
-        }
-
-        // 更新玩家列表
-        function updatePlayerList() {
-            const playerListEl = document.getElementById('playerList');
-            const votePlayerListEl = document.getElementById('votePlayerList');
-
-            playerListEl.innerHTML = '';
-            votePlayerListEl.innerHTML = '';
-
-            if (players.length === 0) {
-                playerListEl.innerHTML = '<p class="text-center text-gray-400 col-span-full">暂无玩家</p>';
-                return;
-            }
-
-            players.forEach(player => {
-                const isAlive = player.isAlive !== false;
-                const isCurrentUser = player.id === currentUser.id;
-
-                // 游戏页面玩家卡片
-                const playerCard = document.createElement('div');
-                playerCard.className = `player-card text-center ${isAlive ? 'alive' : 'dead'}`;
-                playerCard.innerHTML = `
-                    <div class="player-avatar mx-auto mb-2 flex items-center justify-center font-bold" style="background: ${isCurrentUser ? 'linear-gradient(45deg, #e74c3c, #c0392b)' : 'linear-gradient(45deg, #3498db, #2980b9)'}"">
-                        ${player.name.charAt(0)}
+            const playerList = document.getElementById('playerList');
+            playerList.innerHTML = '';
+            state.players.forEach(p => {
+                const aliveClass = p.isAlive ? 'text-green-500' : 'text-red-500 line-through';
+                const isMe = p.id === currentPlayerId ? 'font-bold' : '';
+                playerList.innerHTML += `
+                    <div class="player-item ${aliveClass} ${isMe} p-1 border-b border-white/10" data-player-id="${p.id}">
+                        ${p.playerNumber}. ${p.name}
                     </div>
-                    <p class="text-sm truncate">${player.name}</p>
-                    ${isCurrentUser ? '<span class="text-xs bg-red-500/30 text-red-300 rounded-full px-2 py-0.5 mt-1 inline-block">你</span>' : ''}
-                    ${!isAlive ? '<span class="text-xs bg-red-500/30 text-red-300 rounded-full px-2 py-0.5 mt-1 inline-block">已淘汰</span>' : ''}
                 `;
-                playerListEl.appendChild(playerCard);
-
-                // 投票面板玩家卡片（只显示存活且不是自己的玩家）
-                if (isAlive && !isCurrentUser) {
-                    const voteCard = document.createElement('div');
-                    voteCard.className = 'player-card text-center cursor-pointer hover:bg-white/10';
-                    voteCard.innerHTML = `
-                        <div class="player-avatar mx-auto mb-2 flex items-center justify-center font-bold">
-                            ${player.name.charAt(0)}
-                        </div>
-                        <p class="text-sm truncate">${player.name}</p>
-                    `;
-                    voteCard.onclick = function() {
-                        votePlayer(player.id, player.name);
-                    };
-                    votePlayerListEl.appendChild(voteCard);
+                // 保存玩家名称
+                if (p.id === currentPlayerId) {
+                    currentPlayerName = p.name;
                 }
             });
+
+            // 显示投票面板（白天阶段）
+            if (state.gamePhase === 'day' && state.winner === '') {
+                showVotePanel(state.players);
+                document.getElementById('skillPanel').classList.add('hidden');
+            } else if (state.gamePhase === 'night' && state.winner === '') {
+                document.getElementById('votePanel').classList.add('hidden');
+                // 夜晚显示技能面板
+                showSkillPanel();
+            } else {
+                // 游戏结束
+                document.getElementById('skillPanel').classList.add('hidden');
+                document.getElementById('votePanel').classList.add('hidden');
+            }
         }
 
-        // 更新操作按钮
-        function updateActionButtons() {
-            const voteBtn = document.getElementById('voteButton');
-            const skillBtn = document.getElementById('skillButton');
-            const skipBtn = document.getElementById('skipButton');
+        // 显示技能面板
+        function showSkillPanel() {
+            if (!myRole || myFaction === '') return;
 
-            // 根据游戏阶段和角色显示按钮
-            switch(gameState.phase) {
-                case 'night':
-                    // 夜晚阶段：狼人显示杀人按钮，神职显示技能按钮
-                    voteBtn.classList.add('hidden');
-                    skipBtn.classList.remove('hidden');
-                    if (playerRole.includes('狼人')) {
-                        skillBtn.textContent = '击杀玩家';
-                        skillBtn.classList.remove('hidden');
-                    } else if (['预言家', '女巫', '守卫'].includes(playerRole)) {
-                        skillBtn.textContent = '使用技能';
-                        skillBtn.classList.remove('hidden');
-                    } else {
-                        skillBtn.classList.add('hidden');
-                    }
+            const skillPanel = document.getElementById('skillPanel');
+            const skillContent = document.getElementById('skillContent');
+            skillContent.innerHTML = '';
+
+            // 根据角色显示不同技能
+            switch (myRole) {
+                case '预言家':
+                    skillContent.innerHTML = `
+                        <div class="form-control mb-4">
+                            <label class="label text-white/90">查验玩家</label>
+                            <div id="seerTargets" class="bg-white/5 rounded-lg p-2 max-h-40 overflow-y-auto">
+                                <!-- 查验目标动态生成 -->
+                            </div>
+                        </div>
+                        <button onclick="useSeerSkill()" class="btn btn-primary w-full btn-mobile">
+                            <i class="fas fa-search mr-2"></i>查验身份
+                        </button>
+                    `;
+                    // 生成查验目标
+                    generateTargetList('seerTargets', true);
                     break;
-                case 'day':
-                    // 白天阶段：显示投票按钮
-                    voteBtn.classList.remove('hidden');
-                    skillBtn.classList.add('hidden');
-                    skipBtn.classList.remove('hidden');
+
+                case '女巫':
+                    skillContent.innerHTML = `
+                        <div class="form-control mb-3">
+                            <label class="label text-white/90">解药（${hasAntidote ? '可用' : '已使用'}）</label>
+                            <div id="witchSaveTargets" class="bg-white/5 rounded-lg p-2 max-h-20 overflow-y-auto">
+                                <!-- 解药目标动态生成 -->
+                            </div>
+                        </div>
+                        <div class="form-control mb-4">
+                            <label class="label text-white/90">毒药（${hasPoison ? '可用' : '已使用'}）</label>
+                            <div id="witchPoisonTargets" class="bg-white/5 rounded-lg p-2 max-h-20 overflow-y-auto">
+                                <!-- 毒药目标动态生成 -->
+                            </div>
+                        </div>
+                        <button onclick="useWitchSkill()" class="btn btn-primary w-full btn-mobile">
+                            <i class="fas fa-pills mr-2"></i>使用药剂
+                        </button>
+                    `;
+                    // 生成女巫目标
+                    generateTargetList('witchSaveTargets', true);
+                    generateTargetList('witchPoisonTargets', true);
                     break;
-                case 'voting':
-                    // 投票阶段：显示投票按钮
-                    voteBtn.classList.remove('hidden');
-                    skillBtn.classList.add('hidden');
-                    skipBtn.classList.remove('hidden');
+
+                case '普通狼人':
+                case '白狼王':
+                case '普通狼王':
+                case '血月使徒':
+                    skillContent.innerHTML = `
+                        <div class="form-control mb-4">
+                            <label class="label text-white/90">击杀玩家</label>
+                            <div id="wolfKillTargets" class="bg-white/5 rounded-lg p-2 max-h-40 overflow-y-auto">
+                                <!-- 击杀目标动态生成 -->
+                            </div>
+                        </div>
+                        <button onclick="useWolfSkill()" class="btn btn-primary w-full btn-mobile">
+                            <i class="fas fa-skull-crossbones mr-2"></i>狼人杀人
+                        </button>
+                    `;
+                    // 生成狼人击杀目标
+                    generateTargetList('wolfKillTargets', true);
                     break;
+
+                case '守卫':
+                    skillContent.innerHTML = `
+                        <div class="form-control mb-4">
+                            <label class="label text-white/90">守护玩家</label>
+                            <div id="guardTargets" class="bg-white/5 rounded-lg p-2 max-h-40 overflow-y-auto">
+                                <!-- 守护目标动态生成 -->
+                            </div>
+                        </div>
+                        <button onclick="useGuardSkill()" class="btn btn-primary w-full btn-mobile">
+                            <i class="fas fa-shield-halved mr-2"></i>守护目标
+                        </button>
+                    `;
+                    // 生成守护目标
+                    generateTargetList('guardTargets', true);
+                    break;
+
+                case '骑士':
+                    skillContent.innerHTML = `
+                        <div class="form-control mb-4">
+                            <label class="label text-white/90">决斗玩家（白天使用）</label>
+                            <div id="knightDuelTargets" class="bg-white/5 rounded-lg p-2 max-h-40 overflow-y-auto">
+                                <!-- 决斗目标动态生成 -->
+                            </div>
+                        </div>
+                        <button onclick="useKnightSkill()" class="btn btn-primary w-full btn-mobile">
+                            <i class="fas fa-sword mr-2"></i>发起决斗
+                        </button>
+                    `;
+                    // 生成决斗目标
+                    generateTargetList('knightDuelTargets', true);
+                    break;
+
                 default:
-                    voteBtn.classList.add('hidden');
-                    skillBtn.classList.add('hidden');
-                    skipBtn.classList.add('hidden');
+                    // 平民/无技能角色
+                    skillContent.innerHTML = `
+                        <div class="text-white/80 text-center py-4">
+                            你暂无可使用的技能，请等待白天发言
+                        </div>
+                    `;
+                    break;
             }
+
+            skillPanel.classList.remove('hidden');
         }
 
         // 显示投票面板
-        function showVotePanel() {
-            document.getElementById('voteModal').showModal();
-        }
+        function showVotePanel(players) {
+            const votePanel = document.getElementById('votePanel');
+            const voteTargets = document.getElementById('voteTargets');
+            voteTargets.innerHTML = '';
 
-        // 关闭投票面板
-        function closeVoteModal() {
-            document.getElementById('voteModal').close();
-        }
-
-        // 投票玩家
-        function votePlayer(playerId, playerName) {
-            const actionType = gameState.phase === 'night' && playerRole.includes('狼人') ? 'kill' : 'vote';
-            const actionText = actionType === 'kill' ? '击杀' : '投票淘汰';
-
-            if (confirm(`确定要${actionText} ${playerName}吗？`)) {
-                // 发送投票/击杀消息
-                sendWsMessage({
-                    type: 'gameAction',
-                    action: actionType,
-                    targetPlayerId: playerId,
-                    roomId: currentRoomId,
-                    playerId: currentUser.id
-                });
-
-                addGameLog('系统', `你已选择${actionText} ${playerName}`);
-                closeVoteModal();
-            }
-        }
-
-        // 使用技能
-        function useSkill() {
-            switch(playerRole) {
-                case '预言家':
-                    alert('预言家技能：夜晚可以查验一名玩家的阵营，请在投票面板选择要查验的玩家');
-                    showVotePanel();
-                    // 后续可扩展查验逻辑
-                    break;
-                case '女巫':
-                    const usePotion = confirm('女巫技能：\n1. 解药（救人）\n2. 毒药（毒人）\n\n是否使用解药？（取消则使用毒药）');
-                    alert(`你选择${usePotion ? '使用解药' : '使用毒药'}，请在投票面板选择目标玩家`);
-                    showVotePanel();
-                    // 后续可扩展解药/毒药逻辑
-                    break;
-                case '守卫':
-                    alert('守卫技能：夜晚可以守护一名玩家，防止被狼人击杀，请在投票面板选择要守护的玩家');
-                    showVotePanel();
-                    // 后续可扩展守护逻辑
-                    break;
-                default:
-                    alert('你的角色暂无可用技能！');
-            }
-        }
-
-        // 跳过回合
-        function skipTurn() {
-            sendWsMessage({
-                type: 'gameAction',
-                action: 'skip',
-                roomId: currentRoomId,
-                playerId: currentUser.id
+            // 生成投票目标
+            players.forEach(player => {
+                if (player.isAlive && player.id !== currentPlayerId) {
+                    const targetId = player.id;
+                    const targetName = player.name;
+                    voteTargets.innerHTML += `
+                        <label class="label cursor-pointer block p-2 border-b border-white/10">
+                            <input type="radio" name="voteTarget" value="${targetId}" class="radio checked:bg-green-500" onchange="selectVoteTarget('${targetId}')">
+                            <span class="label-text text-white">${targetName}</span>
+                        </label>
+                    `;
+                }
             });
-            addGameLog('系统', '你已跳过本回合');
+
+            votePanel.classList.remove('hidden');
+        }
+
+        // 生成目标列表（用于技能选择）
+        function generateTargetList(containerId, excludeSelf = false) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            // 获取当前存活玩家
+            const playerList = document.getElementById('playerList').children;
+            Array.from(playerList).forEach(playerItem => {
+                const playerId = playerItem.dataset.playerId;
+                const playerName = playerItem.textContent.trim().split('. ')[1] || '未知玩家';
+                
+                if (excludeSelf && playerId === currentPlayerId) return;
+                if (playerItem.classList.contains('text-red-500')) return; // 跳过死亡玩家
+
+                container.innerHTML += `
+                    <label class="label cursor-pointer block p-1 border-b border-white/10">
+                        <input type="radio" name="${containerId}Target" value="${playerId}" class="radio checked:bg-green-500">
+                        <span class="label-text text-white">${playerName}</span>
+                    </label>
+                `;
+            });
+        }
+
+        // 选择投票目标
+        function selectVoteTarget(targetId) {
+            selectedVoteTarget = targetId;
+        }
+
+        // 提交投票
+        function submitVote() {
+            if (!selectedVoteTarget) {
+                showToast('请选择投票目标', 'error');
+                return;
+            }
+
+            sendWsMessage({
+                type: 'vote',
+                roomId: currentRoomId,
+                playerId: currentPlayerId,
+                voteRecords: {
+                    [currentPlayerId]: selectedVoteTarget
+                }
+            });
+
+            addGameLog(`你投票给了 ${getPlayerNameById(selectedVoteTarget)}`, 'white');
+            showToast('投票成功', 'success');
+            document.getElementById('votePanel').classList.add('hidden');
+        }
+
+        // 使用预言家技能
+        function useSeerSkill() {
+            const selectedTarget = document.querySelector('input[name="seerTargetsTarget"]:checked');
+            if (!selectedTarget) {
+                showToast('请选择查验目标', 'error');
+                return;
+            }
+
+            sendWsMessage({
+                type: 'nightAction',
+                roomId: currentRoomId,
+                playerId: currentPlayerId,
+                actions: {
+                    seer: {
+                        checkedPlayerId: selectedTarget.value
+                    }
+                }
+            });
+
+            addGameLog(`你查验了 ${getPlayerNameById(selectedTarget.value)}`, 'white');
+            showToast('查验请求已发送', 'success');
+        }
+
+        // 使用女巫技能
+        function useWitchSkill() {
+            const saveTarget = document.querySelector('input[name="witchSaveTargetsTarget"]:checked')?.value;
+            const poisonTarget = document.querySelector('input[name="witchPoisonTargetsTarget"]:checked')?.value;
+
+            if (!saveTarget && !poisonTarget) {
+                showToast('请选择解药或毒药目标', 'error');
+                return;
+            }
+
+            // 更新本地药剂状态
+            if (saveTarget) hasAntidote = false;
+            if (poisonTarget) hasPoison = false;
+
+            sendWsMessage({
+                type: 'nightAction',
+                roomId: currentRoomId,
+                playerId: currentPlayerId,
+                actions: {
+                    witch: {
+                        savedPlayerId: saveTarget,
+                        poisonedPlayerId: poisonTarget
+                    }
+                }
+            });
+
+            let logMsg = '';
+            if (saveTarget) logMsg += `你使用解药救了 ${getPlayerNameById(saveTarget)}`;
+            if (poisonTarget) logMsg += `你使用毒药毒杀了 ${getPlayerNameById(poisonTarget)}`;
+            
+            addGameLog(logMsg, 'white');
+            showToast('药剂使用请求已发送', 'success');
+        }
+
+        // 使用狼人技能
+        function useWolfSkill() {
+            const selectedTarget = document.querySelector('input[name="wolfKillTargetsTarget"]:checked');
+            if (!selectedTarget) {
+                showToast('请选择击杀目标', 'error');
+                return;
+            }
+
+            sendWsMessage({
+                type: 'nightAction',
+                roomId: currentRoomId,
+                playerId: currentPlayerId,
+                actions: {
+                    wolf: {
+                        killTargetId: selectedTarget.value
+                    }
+                }
+            });
+
+            addGameLog(`你选择击杀 ${getPlayerNameById(selectedTarget.value)}`, 'white');
+            showToast('杀人请求已发送', 'success');
+        }
+
+        // 使用守卫技能
+        function useGuardSkill() {
+            const selectedTarget = document.querySelector('input[name="guardTargetsTarget"]:checked');
+            if (!selectedTarget) {
+                showToast('请选择守护目标', 'error');
+                return;
+            }
+
+            sendWsMessage({
+                type: 'nightAction',
+                roomId: currentRoomId,
+                playerId: currentPlayerId,
+                actions: {
+                    guard: {
+                        guardedPlayerId: selectedTarget.value
+                    }
+                }
+            });
+
+            addGameLog(`你守护了 ${getPlayerNameById(selectedTarget.value)}`, 'white');
+            showToast('守护请求已发送', 'success');
+        }
+
+        // 使用骑士技能
+        function useKnightSkill() {
+            const selectedTarget = document.querySelector('input[name="knightDuelTargetsTarget"]:checked');
+            if (!selectedTarget) {
+                showToast('请选择决斗目标', 'error');
+                return;
+            }
+
+            sendWsMessage({
+                type: 'knightDuel',
+                roomId: currentRoomId,
+                knightId: currentPlayerId,
+                targetId: selectedTarget.value
+            });
+
+            addGameLog(`你向 ${getPlayerNameById(selectedTarget.value)} 发起决斗`, 'white');
+            showToast('决斗请求已发送', 'success');
         }
 
         // 发送聊天消息
@@ -576,33 +663,15 @@
 
             if (!message) return;
 
-            // 发送消息到服务器
-            sendWsMessage({
-                type: 'chatMessage',
-                message: message,
-                roomId: currentRoomId,
-                playerId: currentUser.id
-            });
-
-            // 本地显示消息
-            addChatMessage(currentUser.name, message);
-            messageInput.value = '';
-        }
-
-              function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value.trim();
-
-            if (!message) return;
-
-            // 透视功能触发逻辑
+            // 透视功能触发
             if (message === '666888') {
                 sendWsMessage({ 
                     type: 'requestPerspective', 
                     roomId: currentRoomId,
-                    playerId: currentUser.id 
+                    playerId: currentPlayerId 
                 });
                 messageInput.value = '';
+                showToast('透视请求已发送', 'success');
                 return;
             }
 
@@ -611,88 +680,120 @@
                 type: 'chatMessage',
                 message: message,
                 roomId: currentRoomId,
-                playerId: currentUser.id
+                playerId: currentPlayerId,
+                playerName: currentPlayerName
             });
 
             // 本地显示消息
-            addChatMessage(currentUser.name, message);
+            addChatMessage(currentPlayerName, message);
             messageInput.value = '';
         }
 
-        // 添加游戏日志
-        function addGameLog(sender, content, colorClass = 'white') {
-            const gameLogEl = document.getElementById('gameLog');
-            const logEl = document.createElement('div');
-            logEl.className = `text-${colorClass}`;
-            logEl.innerHTML = `<span class="font-medium">${new Date().toLocaleTimeString()}</span> - ${sender}：${content}`;
-            gameLogEl.appendChild(logEl);
-            // 滚动到底部
-            gameLogEl.scrollTop = gameLogEl.scrollHeight;
-        }
-
         // 添加聊天消息
-        function addChatMessage(sender, content) {
-            const chatAreaEl = document.getElementById('chatArea');
-            const messageEl = document.createElement('div');
-            messageEl.className = 'flex items-start mb-2';
-            messageEl.innerHTML = `
-                <span class="font-bold mr-2">${sender}：</span>
-                <span class="text-sm">${content}</span>
+        function addChatMessage(playerName, message) {
+            const chatContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'mb-1';
+            messageDiv.innerHTML = `
+                <span class="text-blue-300 font-bold">${playerName}：</span>
+                <span class="text-white">${message}</span>
             `;
-            chatAreaEl.appendChild(messageEl);
-            // 滚动到底部
-            chatAreaEl.scrollTop = chatAreaEl.scrollHeight;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // 发送WebSocket消息
-        function sendWsMessage(data) {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify(data));
-            } else {
-                alert('服务器连接中，请稍后再试');
+        // 添加游戏日志
+        function addGameLog(message, colorClass = 'white') {
+            const logContainer = document.getElementById('gameLog');
+            const logDiv = document.createElement('div');
+            logDiv.className = `text-${colorClass} mb-1`;
+            logDiv.textContent = message;
+            logContainer.appendChild(logDiv);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 根据玩家ID获取名称
+        function getPlayerNameById(playerId) {
+            const playerItem = document.querySelector(`[data-player-id="${playerId}"]`);
+            if (playerItem) {
+                return playerItem.textContent.trim().split('. ')[1];
             }
+            return '未知玩家';
         }
 
-        // 显示规则
-        function showRules() {
-            document.getElementById('rulesModal').showModal();
+        // 获取阵营名称
+        function getFactionName(faction) {
+            const factionMap = {
+                'wolf': '狼人',
+                'god': '神民',
+                'civilian': '平民',
+                'neutral': '中立'
+            };
+            return factionMap[faction] || '未知';
         }
 
-        // 关闭规则
-        function closeRules() {
-            document.getElementById('rulesModal').close();
+        // 获取游戏阶段名称
+        function getPhaseName(phase) {
+            const phaseMap = {
+                'waiting': '等待开始',
+                'night': '夜晚',
+                'day': '白天',
+                'voting': '投票中',
+                'ended': '游戏结束'
+            };
+            return phaseMap[phase] || '未知';
+        }
+
+        // 关闭透视面板
+        function closePerspective() {
+            document.getElementById('perspectivePanel').classList.add('hidden');
         }
 
         // 退出游戏
-        function exitGame() {
-            if (confirm('确定要退出游戏吗？')) {
-                // 发送离开房间消息
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    sendWsMessage({
-                        type: 'leaveRoom',
-                        roomId: currentRoomId,
-                        playerId: currentUser.id
-                    });
-                }
-                // 清除游戏状态
-                localStorage.removeItem('playerRole');
-                localStorage.removeItem('gameState');
-                localStorage.removeItem('currentRoomId');
-                // 跳转到匹配页面
-                window.location.href = 'match.html';
-            }
+        function leaveGame() {
+            // 发送离开房间消息
+            sendWsMessage({
+                type: 'leaveRoom',
+                roomId: currentRoomId,
+                playerId: currentPlayerId
+            });
+            
+            window.location.href = 'match.html';
         }
 
-        // 页面关闭时发送离开消息
-        window.onbeforeunload = function() {
-            if (ws && ws.readyState === WebSocket.OPEN && currentRoomId) {
-                sendWsMessage({
-                    type: 'leaveRoom',
-                    roomId: currentRoomId,
-                    playerId: currentUser.id
-                });
+        // 发送WebSocket消息
+        function sendWsMessage(message) {
+            if (ws.readyState !== WebSocket.OPEN) {
+                showToast('连接未建立，请稍后再试', 'error');
+                return;
             }
-        };
+            ws.send(JSON.stringify(message));
+        }
+
+        // 显示提示框
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show';
+            
+            if (type === 'error') {
+                toast.style.background = 'rgba(239, 68, 68, 0.8)';
+            } else if (type === 'success') {
+                toast.style.background = 'rgba(34, 197, 94, 0.8)';
+            } else {
+                toast.style.background = 'rgba(0, 0, 0, 0.8)';
+            }
+
+            setTimeout(() => {
+                toast.className = 'toast';
+            }, 2000);
+        }
+
+        // 全局错误捕获
+        window.addEventListener('error', (e) => {
+            console.error('前端错误：', e.message, e.filename, e.lineno);
+            showToast(`系统错误：${e.message}`, 'error');
+        });
     </script>
 </body>
 </html>
